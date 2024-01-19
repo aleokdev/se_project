@@ -1,10 +1,10 @@
 #include "i2c.h"
 #include "ssd1306.h"
 #include <msp430.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 void Set_Clk(char VEL) {
   BCSCTL2 = SELM_0 | DIVM_0 | DIVS_0;
@@ -74,58 +74,59 @@ volatile bool rotated_rotary_encoder = false;
 volatile bool morse_button = false;
 
 typedef struct {
-    // Each byte here represents a morse character, and each bit represents either a dit (0) or a dah (1).
-    uint8_t morse_buffer[MESSAGE_BUFFER_MAX_LENGTH];
-    // Character index being sent right now on the morse buffer
-    uint8_t current_msg_char;
-    // Current element within the character being sent right now
-    uint8_t current_morse_element;
+  // Each byte here represents a morse character, and each bit represents either
+  // a dit (0) or a dah (1).
+  uint8_t morse_buffer[MESSAGE_BUFFER_MAX_LENGTH];
+  // Character index being sent right now on the morse buffer
+  uint8_t current_msg_char;
+  // Current element within the character being sent right now
+  uint8_t current_morse_element;
 } State;
 volatile State state = {0};
 
 const static uint16_t morse_characters[26] = {
-    (2 << 8) | 0b10, // A
+    (2 << 8) | 0b10,   // A
     (4 << 8) | 0b0001, // B
     (4 << 8) | 0b0101, // C
-    (3 << 8) | 0b001, // D
-    (1 << 8) | 0b0, // E
+    (3 << 8) | 0b001,  // D
+    (1 << 8) | 0b0,    // E
     (4 << 8) | 0b0100, // F
-    (3 << 8) | 0b011, // G
+    (3 << 8) | 0b011,  // G
     (4 << 8) | 0b0000, // H
-    (2 << 8) | 0b00, // I
+    (2 << 8) | 0b00,   // I
     (4 << 8) | 0b1110, // J
-    (3 << 8) | 0b101, // K
+    (3 << 8) | 0b101,  // K
     (4 << 8) | 0b0010, // L
-    (2 << 8) | 0b11, // M
-    (2 << 8) | 0b01, // N
-    (3 << 8) | 0b111, // O
+    (2 << 8) | 0b11,   // M
+    (2 << 8) | 0b01,   // N
+    (3 << 8) | 0b111,  // O
     (4 << 8) | 0b0110, // P
     (4 << 8) | 0b1011, // Q
-    (3 << 8) | 0b010, // R
-    (3 << 8) | 0b000, // S
-    (1 << 8) | 0b1, // T
-    (3 << 8) | 0b100, // U
+    (3 << 8) | 0b010,  // R
+    (3 << 8) | 0b000,  // S
+    (1 << 8) | 0b1,    // T
+    (3 << 8) | 0b100,  // U
     (4 << 8) | 0b1000, // V
-    (3 << 8) | 0b110, // W
+    (3 << 8) | 0b110,  // W
     (4 << 8) | 0b1001, // X
     (4 << 8) | 0b1101, // Y
     (4 << 8) | 0b0011, // Z
 };
 
-// Returns the given morse code as an ASCII character, or 0 if it does not match any
+// Returns the given morse code as an ASCII character, or 0 if it does not match
+// any
 char translate_morse(uint8_t morse_count, uint8_t morse) {
-    for(int i = 0; i < sizeof(morse_characters) / 2; i++) {
-        uint16_t data = morse_characters[i];
-        uint8_t char_len = (data >> 8) & 0xFF;
-        uint8_t char_morse = data & 0xFF;
-        if(morse_count == char_len && morse == char_morse) {
-            return i + 'A';
-        }
+  for (int i = 0; i < sizeof(morse_characters) / 2; i++) {
+    uint16_t data = morse_characters[i];
+    uint8_t char_len = (data >> 8) & 0xFF;
+    uint8_t char_morse = data & 0xFF;
+    if (morse_count == char_len && morse == char_morse) {
+      return i + 'A';
     }
+  }
 
-    return 0;
+  return 0;
 }
-
 
 int main(void) {
   WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
@@ -133,24 +134,24 @@ int main(void) {
 
   // Rotary encoder inputs
   P2DIR &= ~(BIT1 | BIT2); //
-  P2IES = BIT1 | BIT2;     // Interrupt on rotary encoder rotation (falling edge)
-  P2IFG = 0;               // Clear interrupt flags
+  P2IES = BIT1 | BIT2; // Interrupt on rotary encoder rotation (falling edge)
+  P2IFG = 0;           // Clear interrupt flags
 
   // Morse button
   P1DIR &= ~(BIT5);
-  P1REN |= BIT5;           // Pull-up
+  P1REN |= BIT5; // Pull-up
   P1OUT |= BIT5;
-  P1IES = BIT5;            // Interrupt on morse button press (falling edge)
+  P1IES = BIT5; // Interrupt on morse button press (falling edge)
 
   // Buzzer PWM, use timer 0
   P1DIR |= BIT2;
   P1SEL |= BIT2;
   P1SEL2 &= ~BIT2;
   TA0CCTL0 = 0;
-  TA0CCTL1 = OUTMOD_7; // PWM reset/set
+  TA0CCTL1 = OUTMOD_7;      // PWM reset/set
   TA0CTL = TASSEL_1 | MC_1; // ACLK (12kHz), do not divide, up to CCR0
-  TA0CCR0 = 25; // Frequency: 12000 / 26 = ~440 Hz
-  TA0CCR1 = 0; // Initial duty cycle 0% (off)
+  TA0CCR0 = 25;             // Frequency: 12000 / 26 = ~440 Hz
+  TA0CCR1 = 0;              // Initial duty cycle 0% (off)
 
   // Use timer 1 for morse dit/dah classification
   TA1CTL = TASSEL_1 | ID_3 | MC_1; // ACLK (12kHz), divide by 8, up to CCR0
@@ -172,59 +173,69 @@ int main(void) {
     P1IE |= BIT5;
     LPM0;
     if (rotated_rotary_encoder) {
-        if (direction == Cw) {
-          number++;
-        } else {
-          number--;
-        }
+      if (direction == Cw) {
+        number++;
+      } else {
+        number--;
+      }
     }
     P2IE = 0;
     P1IE = 0;
     ssd1306_printChar(0, 3, morse_button ? '1' : '0');
     ssd1306_printText(0, 1, (direction == Cw) ? "->" : "<-");
 
-    char translated_char = translate_morse(state.current_morse_element, state.morse_buffer[state.current_msg_char]);
-    if(translated_char) {
-        ssd1306_printChar(0, 4, translated_char);
+    char translated_char =
+        translate_morse(state.current_morse_element,
+                        state.morse_buffer[state.current_msg_char]);
+    if (translated_char) {
+      ssd1306_printChar(0, 4, translated_char);
     }
 
     // Draw previous character
-    if(state.current_morse_element > 0) {
-        const uint8_t element_idx = state.current_morse_element - 1;
-        ssd1306_printText(element_idx << 3, 5, (state.morse_buffer[state.current_msg_char] & (1 << element_idx)) ? "-" : ".");
+    if (state.current_morse_element > 0) {
+      const uint8_t element_idx = state.current_morse_element - 1;
+      ssd1306_printText(
+          element_idx << 3, 5,
+          (state.morse_buffer[state.current_msg_char] & (1 << element_idx))
+              ? "-"
+              : ".");
     }
   }
 }
 
-#pragma vector=TIMER1_A0_VECTOR
+#pragma vector = TIMER1_A0_VECTOR
 __interrupt void int_T1_0(void) {
-    state.morse_buffer[state.current_msg_char] |= 1 << state.current_morse_element;
-    state.current_morse_element++;
-    // Stop timer and signal that the last element was a 'dah' to the morse button interrupt
-    TA1CCR0 = 0;
-    LPM0_EXIT; // Redraw current character
+  state.morse_buffer[state.current_msg_char] |= 1
+                                                << state.current_morse_element;
+  state.current_morse_element++;
+  // Stop timer and signal that the last element was a 'dah' to the morse button
+  // interrupt
+  TA1CCR0 = 0;
+  LPM0_EXIT; // Redraw current character
 }
 
 #pragma vector = PORT1_VECTOR
 __interrupt void p1v() {
-  // Change interrupt edge select to call interrupt when the button is released/pressed next time
+  // Change interrupt edge select to call interrupt when the button is
+  // released/pressed next time
   morse_button = !morse_button;
   if (morse_button) {
-      // Start 'dah' timer with a period of ~500ms
-      TA1CCR0 = 749;
-      TA1CCTL0 = CCIE;
-      // Turn on buzzer
-      TA0CCR1 = 13;
+    // Start 'dah' timer with a period of ~500ms
+    TA1CCR0 = 749;
+    TA1CCTL0 = CCIE;
+    // Turn on buzzer
+    TA0CCR1 = 13;
   } else {
-      // If the last morse element sent was a 'dah', the timer must have changed the comparator value to 0, so do not increment the morse element
-      if(TA1CCR0 != 0) {
-          state.current_morse_element++;
-      }
-      // Stop 'dah' timer
-      TA1CCTL0 = 0;
-      TA1CCR0 = 0;
-      // Turn off buzzer
-      TA0CCR1 = 0;
+    // If the last morse element sent was a 'dah', the timer must have changed
+    // the comparator value to 0, so do not increment the morse element
+    if (TA1CCR0 != 0) {
+      state.current_morse_element++;
+    }
+    // Stop 'dah' timer
+    TA1CCTL0 = 0;
+    TA1CCR0 = 0;
+    // Turn off buzzer
+    TA0CCR1 = 0;
   }
   P1IES = ~P1IES;
 
