@@ -58,7 +58,7 @@ void Set_Clk(char VEL) {
 // Current pin connections:
 //                      | P1.0      P2.6 |
 //                      | P1.1      P2.7 |
-//                      | P1.2      TEST |
+//           Buzzer PWM | P1.2      TEST |
 //                      | P1.3      #RST |
 //                      | P1.4      P1.7 | I2C SDA
 //         Morse button | P1.5      P1.6 | I2C SCL
@@ -142,6 +142,16 @@ int main(void) {
   P1OUT |= BIT5;
   P1IES = BIT5;            // Interrupt on morse button press (falling edge)
 
+  // Buzzer PWM, use timer 0
+  P1DIR |= BIT2;
+  P1SEL |= BIT2;
+  P1SEL2 &= ~BIT2;
+  TA0CCTL0 = 0;
+  TA0CCTL1 = OUTMOD_7; // PWM reset/set
+  TA0CTL = TASSEL_1 | MC_1; // ACLK (12kHz), do not divide, up to CCR0
+  TA0CCR0 = 25; // Frequency: 12000 / 26 = ~440 Hz
+  TA0CCR1 = 0; // Initial duty cycle 0% (off)
+
   // Use timer 1 for morse dit/dah classification
   TA1CTL = TASSEL_1 | ID_3 | MC_1; // ACLK (12kHz), divide by 8, up to CCR0
   TA1CCR0 = 0;                     // halt timer
@@ -203,6 +213,8 @@ __interrupt void p1v() {
       // Start 'dah' timer with a period of ~500ms
       TA1CCR0 = 749;
       TA1CCTL0 = CCIE;
+      // Turn on buzzer
+      TA0CCR1 = 13;
   } else {
       // If the last morse element sent was a 'dah', the timer must have changed the comparator value to 0, so do not increment the morse element
       if(TA1CCR0 != 0) {
@@ -211,6 +223,8 @@ __interrupt void p1v() {
       // Stop 'dah' timer
       TA1CCTL0 = 0;
       TA1CCR0 = 0;
+      // Turn off buzzer
+      TA0CCR1 = 0;
   }
   P1IES = ~P1IES;
 
