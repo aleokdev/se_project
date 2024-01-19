@@ -1,0 +1,5 @@
+{
+    "clangd.fallbackFlags": [
+        "-I/home/aleok/ti/ccs1250/ccs/ccs_base/msp430/include"
+    ]
+}
