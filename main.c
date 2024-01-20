@@ -153,7 +153,7 @@ int main(void) {
   TA0CCR0 = 25;             // Frequency: 12000 / 26 = ~440 Hz
   TA0CCR1 = 0;              // Initial duty cycle 0% (off)
 
-  // Use timer 1 for morse dit/dah classification
+  // Use timer 1 for morse dit/dah classification & knowing when to start new letter
   TA1CTL = TASSEL_1 | ID_3 | MC_1; // ACLK (12kHz), divide by 8, up to CCR0
   TA1CCR0 = 0;                     // halt timer
 
@@ -188,7 +188,7 @@ int main(void) {
         translate_morse(state.current_morse_element,
                         state.morse_buffer[state.current_msg_char]);
     if (translated_char) {
-      ssd1306_printChar(0, 4, translated_char);
+      ssd1306_printChar(state.current_msg_char << 3, 4, translated_char);
     }
 
     // Draw previous character
@@ -199,17 +199,27 @@ int main(void) {
           (state.morse_buffer[state.current_msg_char] & (1 << element_idx))
               ? "-"
               : ".");
+    } else {
+        // Clear elements
+        ssd1306_printText(0, 5, "        ");
     }
   }
 }
 
 #pragma vector = TIMER1_A0_VECTOR
 __interrupt void int_T1_0(void) {
-  state.morse_buffer[state.current_msg_char] |= 1
-                                                << state.current_morse_element;
-  state.current_morse_element++;
+  if (morse_button) {
+      // 'dah' timer
+      state.morse_buffer[state.current_msg_char] |= 1
+                                                    << state.current_morse_element;
+      state.current_morse_element++;
+  } else {
+      // Next letter timer
+      state.current_msg_char++;
+      state.current_morse_element = 0;
+  }
   // Stop timer and signal that the last element was a 'dah' to the morse button
-  // interrupt
+  // interrupt, if applicable
   TA1CCR0 = 0;
   LPM0_EXIT; // Redraw current character
 }
@@ -234,6 +244,9 @@ __interrupt void p1v() {
     // Stop 'dah' timer
     TA1CCTL0 = 0;
     TA1CCR0 = 0;
+    // Start letter timer
+    TA1CCR0 = 749 * 3;
+    TA1CCTL0 = CCIE;
     // Turn off buzzer
     TA0CCR1 = 0;
   }
