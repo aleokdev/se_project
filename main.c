@@ -128,38 +128,46 @@ char translate_morse(uint8_t morse_count, uint8_t morse) {
   return 0;
 }
 
+void setup_io(void) {
+    // Rotary encoder inputs
+    P2DIR &= ~(BIT1 | BIT2);
+    P2REN |= BIT1 | BIT2; // Pull-up
+    P1OUT |= BIT1 | BIT2;
+    P2IES &= ~BIT1; // Interrupt on rotary encoder rotation (rising edge in bit 1, falling edge in bit 2)
+    P2IES |= BIT2;
+    P2IFG = 0;           // Clear interrupt flags
+
+    // Morse button
+    P1DIR &= ~(BIT5);
+    P1REN |= BIT5; // Pull-up
+    P1OUT |= BIT5;
+    P1IES |= BIT5; // Interrupt on morse button press (falling edge)
+
+    // Buzzer PWM, use timer 0
+    P1DIR |= BIT2;
+    P1SEL |= BIT2;
+    P1SEL2 &= ~BIT2;
+    TA0CCTL0 = 0;
+    TA0CCTL1 = OUTMOD_7;      // PWM reset/set
+    TA0CTL = TASSEL_1 | MC_1; // ACLK (12kHz), do not divide, up to CCR0
+    TA0CCR0 = 25;             // Frequency: 12000 / 26 = ~440 Hz
+    TA0CCR1 = 0;              // Initial duty cycle 0% (off)
+
+    // Use timer 1 for morse dit/dah classification & knowing when to start new letter
+    TA1CTL = TASSEL_1 | ID_3 | MC_1; // ACLK (12kHz), divide by 8, up to CCR0
+    TA1CCR0 = 0;                     // halt timer
+
+    // Initialize I2C to use with OLED display (Pins 1.6, 1.7)
+    i2c_init();
+
+    // Initialize SSD1306 OLED
+    ssd1306_init();
+}
+
 int main(void) {
   WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
   Set_Clk(16);
-
-  // Rotary encoder inputs
-  P2DIR &= ~(BIT1 | BIT2); //
-  P2IES = BIT1 | BIT2; // Interrupt on rotary encoder rotation (falling edge)
-  P2IFG = 0;           // Clear interrupt flags
-
-  // Morse button
-  P1DIR &= ~(BIT5);
-  P1REN |= BIT5; // Pull-up
-  P1OUT |= BIT5;
-  P1IES = BIT5; // Interrupt on morse button press (falling edge)
-
-  // Buzzer PWM, use timer 0
-  P1DIR |= BIT2;
-  P1SEL |= BIT2;
-  P1SEL2 &= ~BIT2;
-  TA0CCTL0 = 0;
-  TA0CCTL1 = OUTMOD_7;      // PWM reset/set
-  TA0CTL = TASSEL_1 | MC_1; // ACLK (12kHz), do not divide, up to CCR0
-  TA0CCR0 = 25;             // Frequency: 12000 / 26 = ~440 Hz
-  TA0CCR1 = 0;              // Initial duty cycle 0% (off)
-
-  // Use timer 1 for morse dit/dah classification & knowing when to start new letter
-  TA1CTL = TASSEL_1 | ID_3 | MC_1; // ACLK (12kHz), divide by 8, up to CCR0
-  TA1CCR0 = 0;                     // halt timer
-
-  i2c_init(); // initialize I2C to use with OLED
-
-  ssd1306_init();         // Initialize SSD1306 OLED
+  setup_io();
   ssd1306_clearDisplay(); // Clear OLED display
 
   __bis_SR_register(GIE);
@@ -252,18 +260,31 @@ __interrupt void p1v() {
   }
   P1IES = ~P1IES;
 
-  LPM0_EXIT;
   P1IFG = 0;
+  LPM0_EXIT;
 }
 
 #pragma vector = PORT2_VECTOR
 __interrupt void p2v() {
-  if ((P2IFG & BIT1) && (P2IN & BIT2)) {
-    direction = Ccw;
-  } else if ((P2IFG & BIT2) && (P2IN & BIT1)) {
-    direction = Cw;
+  // Bit 1 detects rising edges, bit 2 detects falling edges
+  if (P2IFG & BIT1) {
+      if(P2IN & BIT2) {
+          // 1 and 2 are on, 2 turned on first
+          direction = Ccw;
+      } else {
+          // 1 is on, 1 turned on first
+          direction = Cw;
+      }
+  } else { // P2IFG & BIT2
+      if(P2IN & BIT1) {
+          // 2 is off, 2 turned off first
+          direction = Ccw;
+      } else {
+          // 1 and 2 are off, 1 turned off first
+          direction = Cw;
+      }
   }
   rotated_rotary_encoder = true;
-  LPM0_EXIT;
   P2IFG = 0;
+  LPM0_EXIT;
 }
