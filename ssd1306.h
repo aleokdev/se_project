@@ -5,12 +5,8 @@
 #ifndef SSD1306_H_
 #define SSD1306_H_
 
-#include <msp430.h>
 #include <stdint.h>
-#include <string.h>
-#include "i2c.h"
-
-unsigned char buffer[17];                                                     // buffer for data transmission to screen
+#include <stdbool.h>
 
 /* ====================================================================
  * Horizontal Centering Number Array
@@ -74,6 +70,15 @@ unsigned char buffer[17];                                                     //
 #define SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL    0x29
 #define SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL     0x2A
 
+#define SSD1306_SCROLL_FREQ_1 0b111 // 2 frames per scroll
+#define SSD1306_SCROLL_FREQ_2 0b100 // 3 frames per scroll
+#define SSD1306_SCROLL_FREQ_3 0b101 // 4 frames per scroll
+#define SSD1306_SCROLL_FREQ_4 0b000 // 5 frames per scroll
+#define SSD1306_SCROLL_FREQ_5 0b110 // 25 frames per scroll
+#define SSD1306_SCROLL_FREQ_6 0b001 // 64 frames per scroll
+#define SSD1306_SCROLL_FREQ_7 0b010 // 128 frames per scroll
+#define SSD1306_SCROLL_FREQ_8 0b011 // 256 frames per scroll
+
 
 /* ====================================================================
  * SSD1306 OLED Prototype Definitions
@@ -82,10 +87,15 @@ void ssd1306_init(void);
 void ssd1306_command(unsigned char);
 void ssd1306_clearDisplay(void);
 void ssd1306_setPosition(uint8_t, uint8_t);
-void ssd1306_printChar(uint8_t, uint8_t, char);
-void ssd1306_printText(uint8_t, uint8_t, char *);
-void ssd1306_printTextBlock(uint8_t, uint8_t, char *);
-void ssd1306_printUI32(uint8_t, uint8_t, uint32_t, uint8_t);
+void ssd1306_setDrawingRect(uint8_t start_column, uint8_t start_page, uint8_t end_column, uint8_t end_page);
+void ssd1306_stopScroll();
+void ssd1306_startHorzScroll(uint8_t start_page, uint8_t end_page, uint8_t time_interval);
+void ssd1306_clearPage(uint8_t page, bool value);
+void ssd1306_printChar(uint8_t, uint8_t, char, bool inverted);
+void ssd1306_printChar2x(uint8_t, uint8_t, char, bool inverted);
+void ssd1306_printText(uint8_t, uint8_t, char *, bool inverted);
+void ssd1306_printTextBlock(uint8_t, uint8_t, char *, bool inverted);
+void ssd1306_printUI32(uint8_t, uint8_t, uint32_t, uint8_t, bool inverted);
 
 uint8_t digits(uint32_t);
 void ultoa(uint32_t, char *);

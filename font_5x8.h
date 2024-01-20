@@ -1,11 +1,7 @@
-/*
- * font_5x7.h
- */
+#ifndef FONT_5X8_H_
+#define FONT_5X8_H_
 
-#ifndef FONT_5X7_H_
-#define FONT_5X7_H_
-
-const unsigned char font_5x7[96][5] = {{0x00, 0x00, 0x00, 0x00, 0x00},  // space
+const unsigned char font_5x8[96][5] = {{0x00, 0x00, 0x00, 0x00, 0x00},  // space
                                        {0x00, 0x00, 0x4F, 0x00, 0x00},  // !
                                        {0x00, 0x07, 0x00, 0x07, 0x00},  // "
                                        {0x14, 0x7F, 0x14, 0x7F, 0x14},  // #
@@ -98,4 +94,4 @@ const unsigned char font_5x7[96][5] = {{0x00, 0x00, 0x00, 0x00, 0x00},  // space
                                        {0x44, 0x64, 0x54, 0x4C, 0x44},  // z
 };
 
-#endif /* FONT_5X7_H_ */
+#endif /* FONT_5X8_H_ */

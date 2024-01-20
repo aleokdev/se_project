@@ -2,11 +2,13 @@
  * ssd1306.c
  */
 
+#include <font_5x8.h>
 #include "ssd1306.h"
 #include <msp430.h>
 #include <stdint.h>
-#include "font_5x7.h"
 #include "i2c.h"
+
+unsigned char buffer[32];                                                     // buffer for data transmission to screen
 
 /* ====================================================================
  * Horizontal Centering Number Array
@@ -104,22 +106,89 @@ void ssd1306_setPosition(uint8_t column, uint8_t page) {
     ssd1306_command(7);                                                 // Page end address
 } // end ssd1306_setPosition
 
-void ssd1306_printChar(uint8_t x, uint8_t y, char ch) {
+void ssd1306_setDrawingRect(uint8_t start_column, uint8_t start_page, uint8_t end_column, uint8_t end_page) {
+    ssd1306_command(SSD1306_COLUMNADDR);
+    ssd1306_command(start_column);                                      // Column start address (0 = reset)
+    ssd1306_command(end_column);                                        // Column end address (127 = reset)
+
+    ssd1306_command(SSD1306_PAGEADDR);
+    ssd1306_command(start_page);                                        // Page start address (0 = reset)
+    ssd1306_command(end_page);                                          // Page end address
+}
+
+void ssd1306_printChar(uint8_t x, uint8_t y, char ch, bool inverted) {
     ssd1306_setPosition(x, y);
 
     buffer[0] = 0x40;
 
+    uint8_t inverting_mask = inverted ? 0xFF : 0;
+
     uint8_t i;
     for(i = 0; i< 5; i++) {
-        buffer[i+1] = font_5x7[ch - ' '][i];
+        buffer[i+1] = font_5x8[ch - ' '][i] ^ inverting_mask;
     }
 
-    buffer[6] = 0x0;
+    buffer[6] = inverting_mask;
 
     i2c_write(SSD1306_I2C_ADDRESS, buffer, 7);
 }
 
-void ssd1306_printText(uint8_t x, uint8_t y, char *ptString) {
+void ssd1306_printChar2x(uint8_t x, uint8_t y, char ch, bool inverted) {
+    ssd1306_setDrawingRect(x, y, x+10, 7);
+
+    buffer[0] = 0x40; // Upload data
+
+    uint8_t inverting_mask = inverted ? 0xFF : 0;
+
+    for(uint8_t i = 0; i< 10; i++) {
+        uint8_t column = font_5x8[ch - ' '][i >> 1] ^ inverting_mask;
+        uint8_t upper_half_2x = (column & 0b0001) | ((column & 0b0001) << 1) | ((column & 0b0010) << 1) | ((column & 0b0010) << 2) | ((column & 0b0100) << 2) | ((column & 0b0100) << 3) | ((column & 0b1000) << 3) | ((column & 0b1000) << 4);
+        buffer[i+1] = upper_half_2x;
+    }
+
+    buffer[11] = inverting_mask;
+
+    for(uint8_t i = 0; i< 10; i++) {
+        uint8_t column = (font_5x8[ch - ' '][i >> 1] ^ inverting_mask) >> 4;
+        uint8_t lower_half_2x = (column & 0b0001) | ((column & 0b0001) << 1) | ((column & 0b0010) << 1) | ((column & 0b0010) << 2) | ((column & 0b0100) << 2) | ((column & 0b0100) << 3) | ((column & 0b1000) << 3) | ((column & 0b1000) << 4);
+        buffer[i+12] = lower_half_2x;
+    }
+
+    buffer[22] = inverting_mask;
+
+    i2c_write(SSD1306_I2C_ADDRESS, buffer, 23);
+}
+
+void ssd1306_stopScroll() {
+    ssd1306_command(0x2E); // Deactivate scrolling
+}
+
+void ssd1306_startHorzScroll(uint8_t start_page, uint8_t end_page, uint8_t time_interval) {
+    ssd1306_command(0x2E); // Deactivate scrolling
+
+    ssd1306_command(0x26);
+    ssd1306_command(0x00);
+    ssd1306_command(start_page);
+    ssd1306_command(time_interval);
+    ssd1306_command(end_page);
+    ssd1306_command(0x00);
+    ssd1306_command(0xFF);
+
+    ssd1306_command(0x2F); // Activate scrolling
+
+}
+
+void ssd1306_clearPage(uint8_t page, bool value) {
+    ssd1306_setDrawingRect(0, page, SSD1306_LCDWIDTH-1, page);
+
+    buffer[0] = 0x40; // Upload data
+    buffer[1] = value ? 0xFF : 0x00; // Empty column
+    for(uint8_t i = SSD1306_LCDWIDTH; i > 0; i--) {
+        i2c_write(SSD1306_I2C_ADDRESS, buffer, 2);
+    }
+}
+
+void ssd1306_printText(uint8_t x, uint8_t y, char *ptString, bool inverted) {
     ssd1306_setPosition(x, y);
 
     while (*ptString != '\0') {
@@ -129,14 +198,14 @@ void ssd1306_printText(uint8_t x, uint8_t y, char *ptString) {
             ssd1306_setPosition(x, y);                                  // send position change to oled
         }
 
-        ssd1306_printChar(x, y, *ptString);
+        ssd1306_printChar(x, y, *ptString, inverted);
 
         ptString++;
         x+=6;
     }
 } // end ssd1306_printText
 
-void ssd1306_printTextBlock(uint8_t x, uint8_t y, char *ptString) {
+void ssd1306_printTextBlock(uint8_t x, uint8_t y, char *ptString, bool inverted) {
     char word[12];
     uint8_t i;
     uint8_t endX = x;
@@ -154,11 +223,11 @@ void ssd1306_printTextBlock(uint8_t x, uint8_t y, char *ptString) {
         if (endX >= 127) {
             x = 0;
             y++;
-            ssd1306_printText(x, y, word);
+            ssd1306_printText(x, y, word, inverted);
             endX = (i * 6);
             x = endX;
         } else {
-            ssd1306_printText(x, y, word);
+            ssd1306_printText(x, y, word, inverted);
             endX += 6;
             x = endX;
         }
@@ -172,14 +241,14 @@ void ssd1306_printTextBlock(uint8_t x, uint8_t y, char *ptString) {
 }
 
 
-void ssd1306_printUI32( uint8_t x, uint8_t y, uint32_t val, uint8_t Hcenter ) {
+void ssd1306_printUI32( uint8_t x, uint8_t y, uint32_t val, uint8_t Hcenter, bool inverted) {
     char text[14];
 
     ultoa(val, text);
     if (Hcenter) {
-        ssd1306_printText(HcenterUL[digits(val)], y, text);
+        ssd1306_printText(HcenterUL[digits(val)], y, text, inverted);
     } else {
-        ssd1306_printText(x, y, text);
+        ssd1306_printText(x, y, text, inverted);
     }
 } // end ssd1306_printUI32
 

@@ -62,7 +62,7 @@ void Set_Clk(char VEL) {
 //                      | P1.3      #RST |
 //                      | P1.4      P1.7 | I2C SDA
 //         Morse button | P1.5      P1.6 | I2C SCL
-//                      | P2.0      P2.5 |
+//  Rotary encoder butn | P2.0      P2.5 |
 // Rotary encoder "DT"  | P2.1      P2.4 |
 // Rotary encoder "CLK" | P2.2      P2.3 |
 
@@ -70,7 +70,6 @@ void Set_Clk(char VEL) {
 typedef enum { Cw, Ccw } ReDirection;
 
 volatile ReDirection direction = Cw;
-volatile bool rotated_rotary_encoder = false;
 volatile bool morse_button = false;
 
 typedef struct {
@@ -81,8 +80,40 @@ typedef struct {
   uint8_t current_msg_char;
   // Current element within the character being sent right now
   uint8_t current_morse_element;
+
+  bool settings_menu_open;
+  uint8_t setting_selected;
 } State;
 volatile State state = {0};
+
+volatile bool rotated_rotary_encoder = false;
+volatile bool redraw_menu = false;
+
+// How to display a setting value
+typedef enum {
+    SettingDisplay_Bar,
+    SettingDisplay_Number
+} SettingDisplay;
+
+typedef struct {
+    void (*redraw_fn)(bool /* selected */);
+} SettingParams;
+
+void redraw_volume_setting(bool selected) {
+    ssd1306_printText(3*6, 1, "Volume", selected);
+    ssd1306_printText(6 * 10, 1, "------*--", false);
+}
+
+void redraw_tone_setting(bool selected) {
+    ssd1306_printText(6*5, 2, "Tone", selected);
+    ssd1306_printText(6 * 10, 2, "460 Hz", false);
+}
+
+#define SETTINGS_COUNT 2
+const SettingParams setting_params[SETTINGS_COUNT] = {
+                                                      { .redraw_fn = redraw_volume_setting },
+                                                      { .redraw_fn = redraw_tone_setting }
+};
 
 const static uint16_t morse_characters[26] = {
     (2 << 8) | 0b10,   // A
@@ -130,11 +161,11 @@ char translate_morse(uint8_t morse_count, uint8_t morse) {
 
 void setup_io(void) {
     // Rotary encoder inputs
-    P2DIR &= ~(BIT1 | BIT2);
-    P2REN |= BIT1 | BIT2; // Pull-up
-    P1OUT |= BIT1 | BIT2;
-    P2IES &= ~BIT1; // Interrupt on rotary encoder rotation (rising edge in bit 1, falling edge in bit 2)
-    P2IES |= BIT2;
+    P2DIR &= ~(BIT1 | BIT2 | BIT0);
+    P2REN |= BIT1 | BIT2 | BIT0; // Pull-up
+    P2OUT |= BIT1 | BIT2 | BIT0;
+    P2IES &= ~BIT1; // Interrupt on rotary encoder rotation (rising edge in bit 1, falling edge in bit 2 & button)
+    P2IES |= BIT2 | BIT0;
     P2IFG = 0;           // Clear interrupt flags
 
     // Morse button
@@ -142,6 +173,7 @@ void setup_io(void) {
     P1REN |= BIT5; // Pull-up
     P1OUT |= BIT5;
     P1IES |= BIT5; // Interrupt on morse button press (falling edge)
+    P1IFG = 0;     // Clear interrupt flags
 
     // Buzzer PWM, use timer 0
     P1DIR |= BIT2;
@@ -164,52 +196,87 @@ void setup_io(void) {
     ssd1306_init();
 }
 
+void redraw_morse_transmission_screen(void) {
+    ssd1306_clearDisplay();
+    ssd1306_clearPage(0, true);
+    ssd1306_clearPage(7, true);
+    ssd1306_printText(0, 0, "Morse transmitter", true);
+}
+
+void redraw_settings_screen(void) {
+    ssd1306_clearDisplay();
+    ssd1306_clearPage(0, true);
+    ssd1306_printText(0, 0, "Settings", true);
+
+    for(uint8_t i = 0; i < SETTINGS_COUNT; i++) {
+        setting_params[i].redraw_fn(state.setting_selected == i);
+    }
+}
+
 int main(void) {
   WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
   Set_Clk(16);
   setup_io();
-  ssd1306_clearDisplay(); // Clear OLED display
 
   __bis_SR_register(GIE);
 
-  int32_t number = 50;
+  redraw_morse_transmission_screen();
 
   while (1) {
-    ssd1306_printUI32(0, 2, number, HCENTERUL_OFF);
-    ssd1306_printText(0, 0, "Test");
-    P2IE |= BIT1 | BIT2;
+    P2IE |= BIT1 | BIT2 | BIT0;
     P1IE |= BIT5;
     LPM0;
-    if (rotated_rotary_encoder) {
-      if (direction == Cw) {
-        number++;
-      } else {
-        number--;
-      }
-    }
     P2IE = 0;
     P1IE = 0;
-    ssd1306_printChar(0, 3, morse_button ? '1' : '0');
-    ssd1306_printText(0, 1, (direction == Cw) ? "->" : "<-");
-
-    char translated_char =
-        translate_morse(state.current_morse_element,
-                        state.morse_buffer[state.current_msg_char]);
-    if (translated_char) {
-      ssd1306_printChar(state.current_msg_char << 3, 4, translated_char);
+    if(redraw_menu) {
+        if(state.settings_menu_open) {
+            redraw_settings_screen();
+        } else {
+            redraw_morse_transmission_screen();
+        }
+        redraw_menu = false;
     }
+    if(state.settings_menu_open) {
+        const uint8_t last_setting_selected = state.setting_selected;
+        if (rotated_rotary_encoder) {
+          if (direction == Cw) {
+              if (state.setting_selected < SETTINGS_COUNT - 1) {
+                  state.setting_selected++;
+              }
+          } else {
+              if (state.setting_selected > 0) {
+                  state.setting_selected--;
+              }
+          }
+          rotated_rotary_encoder = false;
+        }
 
-    // Draw previous character
-    if (state.current_morse_element > 0) {
-      const uint8_t element_idx = state.current_morse_element - 1;
-      ssd1306_printText(
-          element_idx << 3, 5,
-          (state.morse_buffer[state.current_msg_char] & (1 << element_idx))
-              ? "-"
-              : ".");
+        if(last_setting_selected != state.setting_selected) {
+            setting_params[last_setting_selected].redraw_fn(false);
+            setting_params[state.setting_selected].redraw_fn(true);
+        }
     } else {
-        // Clear elements
-        ssd1306_printText(0, 5, "        ");
+        char translated_char =
+            translate_morse(state.current_morse_element,
+                            state.morse_buffer[state.current_msg_char]);
+        if (translated_char) {
+          ssd1306_printChar2x((state.current_msg_char << 3) + (state.current_msg_char << 2), 2, translated_char, false);
+        }
+
+        // Draw previous character
+        if (state.current_morse_element > 0) {
+          const uint8_t element_idx = state.current_morse_element - 1;
+          ssd1306_printChar(
+              element_idx << 3, 7,
+              (state.morse_buffer[state.current_msg_char] & (1 << element_idx))
+                  ? '-'
+                  : '.', true);
+        } else {
+            // Clear elements
+            for(uint8_t i = 132 / 6; i > 0; i -= 6) {
+                ssd1306_printChar(i - 6, 7, ' ', true);
+            }
+        }
     }
   }
 }
@@ -266,25 +333,30 @@ __interrupt void p1v() {
 
 #pragma vector = PORT2_VECTOR
 __interrupt void p2v() {
-  // Bit 1 detects rising edges, bit 2 detects falling edges
-  if (P2IFG & BIT1) {
-      if(P2IN & BIT2) {
-          // 1 and 2 are on, 2 turned on first
-          direction = Ccw;
-      } else {
-          // 1 is on, 1 turned on first
-          direction = Cw;
+  if(P2IFG & BIT0) {
+      state.settings_menu_open = !state.settings_menu_open;
+      redraw_menu = true;
+  } else {
+      // Bit 1 detects rising edges, bit 2 detects falling edges
+      if (P2IFG & BIT1) {
+          if(P2IN & BIT2) {
+              // 1 and 2 are on, 2 turned on first
+              direction = Ccw;
+          } else {
+              // 1 is on, 1 turned on first
+              direction = Cw;
+          }
+      } else { // P2IFG & BIT2
+          if(P2IN & BIT1) {
+              // 2 is off, 2 turned off first
+              direction = Ccw;
+          } else {
+              // 1 and 2 are off, 1 turned off first
+              direction = Cw;
+          }
       }
-  } else { // P2IFG & BIT2
-      if(P2IN & BIT1) {
-          // 2 is off, 2 turned off first
-          direction = Ccw;
-      } else {
-          // 1 and 2 are off, 1 turned off first
-          direction = Cw;
-      }
+      rotated_rotary_encoder = true;
   }
-  rotated_rotary_encoder = true;
   P2IFG = 0;
   LPM0_EXIT;
 }
