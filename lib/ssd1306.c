@@ -7,6 +7,7 @@
 #include <msp430.h>
 #include <stdint.h>
 #include "i2c.h"
+#include <string.h>
 
 unsigned char buffer[32];                                                     // buffer for data transmission to screen
 
