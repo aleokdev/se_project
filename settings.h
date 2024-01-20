@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 typedef struct {
-    void (*redraw_fn)(bool /* selected */);
+  void (*redraw_fn)(bool /* selected */);
 } SettingParams;
 
 #define SETTINGS_COUNT 2
