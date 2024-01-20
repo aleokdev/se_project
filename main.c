@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "rotary_encoder.h"
 
 void Set_Clk(char VEL) {
   BCSCTL2 = SELM_0 | DIVM_0 | DIVS_0;
@@ -68,9 +69,6 @@ void Set_Clk(char VEL) {
 // Rotary encoder "DT"  | P2.1      P2.4 |
 // Rotary encoder "CLK" | P2.2      P2.3 |
 
-// Rotary encoder direction
-typedef enum { Cw, Ccw } ReDirection;
-
 volatile ReDirection direction = Cw;
 volatile bool morse_button = false;
 
@@ -84,11 +82,13 @@ typedef struct {
   uint8_t current_morse_element;
 
   bool settings_menu_open;
-  uint8_t setting_selected;
+  uint8_t setting_hovered;
+  bool setting_is_selected;
 } State;
 volatile State state = {0};
 
 volatile bool rotated_rotary_encoder = false;
+volatile bool pressed_rotary_button = false;
 volatile bool redraw_menu = false;
 
 void setup_io(void) {
@@ -134,16 +134,16 @@ void redraw_morse_transmission_screen(void) {
   ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
   ssd1306_clearPage(7, true);
-  ssd1306_printText(0, 0, "Morse transmitter", true);
+  ssd1306_printText(0, 0, "Transmisor", true);
 }
 
 void redraw_settings_screen(void) {
   ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
-  ssd1306_printText(0, 0, "Settings", true);
+  ssd1306_printText(0, 0, "Preferencias", true);
 
   for (uint8_t i = 0; i < SETTINGS_COUNT; i++) {
-    setting_params[i].redraw_fn(state.setting_selected == i);
+    setting_params[i].redraw_fn(state.setting_hovered == i, (state.setting_hovered == i) && state.setting_is_selected);
   }
 }
 
@@ -162,6 +162,11 @@ int main(void) {
     LPM0;
     P2IE = 0;
     P1IE = 0;
+    if (pressed_rotary_button && !state.settings_menu_open) {
+        state.settings_menu_open = true;
+        redraw_menu = true;
+        pressed_rotary_button = false;
+    }
     if (redraw_menu) {
       if (state.settings_menu_open) {
         redraw_settings_screen();
@@ -171,23 +176,41 @@ int main(void) {
       redraw_menu = false;
     }
     if (state.settings_menu_open) {
-      const uint8_t last_setting_selected = state.setting_selected;
       if (rotated_rotary_encoder) {
-        if (direction == Cw) {
-          if (state.setting_selected < SETTINGS_COUNT - 1) {
-            state.setting_selected++;
+          if (!state.setting_is_selected) {
+              const uint8_t last_setting_hovered = state.setting_hovered;
+
+              if (direction == Cw) {
+                if (state.setting_hovered < SETTINGS_COUNT - 1) {
+                  state.setting_hovered++;
+                }
+              } else {
+                if (state.setting_hovered > 0) {
+                  state.setting_hovered--;
+                }
+              }
+
+              if (last_setting_hovered != state.setting_hovered) {
+                setting_params[last_setting_hovered].redraw_fn(false, false);
+                setting_params[state.setting_hovered].redraw_fn(true, false);
+              }
+          } else {
+              setting_params[state.setting_hovered].changed_fn(direction);
+              setting_params[state.setting_hovered].redraw_fn(true, true);
           }
-        } else {
-          if (state.setting_selected > 0) {
-            state.setting_selected--;
-          }
-        }
-        rotated_rotary_encoder = false;
+
+          rotated_rotary_encoder = false;
       }
 
-      if (last_setting_selected != state.setting_selected) {
-        setting_params[last_setting_selected].redraw_fn(false);
-        setting_params[state.setting_selected].redraw_fn(true);
+      if(pressed_rotary_button) {
+          state.setting_is_selected = !state.setting_is_selected;
+          setting_params[state.setting_hovered].redraw_fn(true, state.setting_is_selected);
+          pressed_rotary_button = false;
+      }
+
+      if (morse_button && !state.setting_is_selected) {
+          state.settings_menu_open = false;
+          redraw_morse_transmission_screen();
       }
     } else {
       char translated_char =
@@ -220,20 +243,23 @@ int main(void) {
 
 #pragma vector = TIMER1_A0_VECTOR
 __interrupt void int_T1_0(void) {
-  if (morse_button) {
-    // 'dah' timer
-    state.morse_buffer[state.current_msg_char] |=
-        1 << state.current_morse_element;
-    state.current_morse_element++;
-  } else {
-    // Next letter timer
-    state.current_msg_char++;
-    state.current_morse_element = 0;
-  }
-  // Stop timer and signal that the last element was a 'dah' to the morse button
-  // interrupt, if applicable
-  TA1CCR0 = 0;
-  LPM0_EXIT; // Redraw current character
+    if(!state.settings_menu_open) {
+        // TODO: Do this in the main loop instead
+      if (morse_button) {
+        // 'dah' timer
+        state.morse_buffer[state.current_msg_char] |=
+            1 << state.current_morse_element;
+        state.current_morse_element++;
+      } else {
+        // Next letter timer
+        state.current_msg_char++;
+        state.current_morse_element = 0;
+      }
+      // Stop timer and signal that the last element was a 'dah' to the morse button
+      // interrupt, if applicable
+      TA1CCR0 = 0;
+      LPM0_EXIT; // Redraw current character
+    }
 }
 
 #pragma vector = PORT1_VECTOR
@@ -250,7 +276,8 @@ __interrupt void p1v() {
   } else {
     // If the last morse element sent was a 'dah', the timer must have changed
     // the comparator value to 0, so do not increment the morse element
-    if (TA1CCR0 != 0) {
+      // TODO: Do this in the main loop instead
+    if (TA1CCR0 != 0 && !state.settings_menu_open) {
       state.current_morse_element++;
     }
     // Stop 'dah' timer
@@ -271,8 +298,7 @@ __interrupt void p1v() {
 #pragma vector = PORT2_VECTOR
 __interrupt void p2v() {
   if (P2IFG & BIT0) {
-    state.settings_menu_open = !state.settings_menu_open;
-    redraw_menu = true;
+      pressed_rotary_button = true;
   } else {
     // Bit 1 detects rising edges, bit 2 detects falling edges
     if (P2IFG & BIT1) {

@@ -73,21 +73,9 @@ void ssd1306_command(unsigned char command) {
 } // end ssd1306_command
 
 void ssd1306_clearDisplay(void) {
-
-  ssd1306_setPosition(0, 0);
-  uint8_t i;
-  for (i = 64; i > 0; i--) { // count down for loops when possible for ULP
-    uint8_t x;
-    for (x = 16; x > 0; x--) {
-      if (x == 1) {
-        buffer[x - 1] = 0x40;
-      } else {
-        buffer[x - 1] = 0x0;
-      }
+    for(uint8_t i = 8; i > 0; i--) {
+        ssd1306_clearPage(i - 1, false);
     }
-
-    i2c_write(SSD1306_I2C_ADDRESS, buffer, 17);
-  }
 } // end ssd1306_clearDisplay
 
 void ssd1306_setPosition(uint8_t column, uint8_t page) {
