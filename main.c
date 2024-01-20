@@ -116,12 +116,12 @@ const static uint16_t morse_characters[26] = {
 // Returns the given morse code as an ASCII character, or 0 if it does not match
 // any
 char translate_morse(uint8_t morse_count, uint8_t morse) {
-  for (int i = 0; i < sizeof(morse_characters) / 2; i++) {
-    uint16_t data = morse_characters[i];
+  for (uint8_t i = sizeof(morse_characters) / 2; i > 0; i--) {
+    uint16_t data = morse_characters[i - 1];
     uint8_t char_len = (data >> 8) & 0xFF;
     uint8_t char_morse = data & 0xFF;
     if (morse_count == char_len && morse == char_morse) {
-      return i + 'A';
+      return i - 1 + 'A';
     }
   }
 
