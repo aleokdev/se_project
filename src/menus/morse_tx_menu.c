@@ -10,10 +10,11 @@
 void skip_to_next_msg_char(State* state);
 
 void redraw_message_buffer(const State* state) {
-    ssd1306_clearPage(2, false);
-    ssd1306_clearPage(3, false);
     for(uint8_t i = 0; i < state->current_msg_char; i++) {
         ssd1306_printChar2x((i << 3) + (i << 2), 2, state->msg_buffer[i], false);
+    }
+    for(uint8_t i = state->current_msg_char; i < MESSAGE_BUFFER_MAX_LENGTH; i++) {
+        ssd1306_printChar2x((i << 3) + (i << 2), 2, ' ', false);
     }
 }
 
@@ -36,7 +37,7 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
       // Turn on buzzer
       TA0CCR0 = tone_value;
       // Set up timer for 'dah' detection
-      setup_timer(400);
+      setup_timer(dah_time);
 
       ssd1306_printChar(state->current_morse_element << 3, 7, '.', true);
   }
@@ -54,7 +55,7 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
       // Turn off buzzer
       TA0CCR0 = 0;
       // Setup next character timer
-      setup_timer(400);
+      setup_timer(dah_time);
       state->current_morse_element++;
 
       if (state->current_morse_element > 4) {

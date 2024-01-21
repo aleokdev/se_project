@@ -62,7 +62,7 @@ void setup_io(void) {
   ssd1306_init();
 }
 
-                                                                                                                                                                                                                                                int main(void) {
+int main(void) {
   WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
   Set_Clk(16);
   setup_io();
