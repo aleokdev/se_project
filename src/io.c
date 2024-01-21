@@ -13,9 +13,12 @@ __interrupt void int_T1_0(void) {
 
 #pragma vector = PORT1_VECTOR
 __interrupt void p1v() {
+  static bool is_morse_button_pressed = false;
   // Change interrupt edge select to call interrupt when the button is
   // released/pressed next time
-  io_actions.pressed_morse_button = !io_actions.pressed_morse_button;
+  is_morse_button_pressed = !is_morse_button_pressed;
+  io_actions.pressed_morse_button = is_morse_button_pressed;
+  io_actions.released_morse_button = !is_morse_button_pressed;
   P1IES = ~P1IES;
 
   P1IFG = 0;

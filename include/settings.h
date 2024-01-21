@@ -1,9 +1,9 @@
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#pragma once
 
 #include "rotary_encoder.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
   void (*redraw_fn)(bool /* hovered */, bool /* selected */);
@@ -14,4 +14,4 @@ typedef struct {
 
 extern const SettingParams setting_params[SETTINGS_COUNT];
 
-#endif
+extern uint16_t tone_value;

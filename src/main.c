@@ -45,14 +45,15 @@ void setup_io(void) {
   P1SEL2 &= ~BIT2;
   TA0CCTL0 = 0;
   TA0CCTL1 = OUTMOD_7;      // PWM reset/set
+  TA0CCR0 = 0;              // Turn it off
   TA0CTL = TASSEL_1 | MC_1; // ACLK (12kHz), do not divide, up to CCR0
-  TA0CCR0 = 19;             // Frequency: 12000 / 20 = 600 Hz
-  TA0CCR1 = 0;              // Initial duty cycle 0% (off)
+  TA0CCR1 = 9;              // Initial duty cycle 50%
 
   // Use timer 1 for morse dit/dah classification & knowing when to start new
   // letter
   TA1CTL = TASSEL_1 | ID_3 | MC_1; // ACLK (12kHz), divide by 8, up to CCR0
-  TA1CCR0 = 0;                     // halt timer
+  TA1CCR0 = 0;                     // Halt timer
+  TA1CCTL0 = CCIE;                 // Interrupt when timer reaches value at CCR0
 
   // Initialize I2C to use with OLED display (Pins 1.6, 1.7)
   i2c_init();
@@ -61,7 +62,7 @@ void setup_io(void) {
   ssd1306_init();
 }
 
-int main(void) {
+                                                                                                                                                                                                                                                int main(void) {
   WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
   Set_Clk(16);
   setup_io();
