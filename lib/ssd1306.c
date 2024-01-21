@@ -74,7 +74,7 @@ void ssd1306_command(unsigned char command) {
 
 void ssd1306_clearDisplay(void) {
     for(uint8_t i = 8; i > 0; i--) {
-        ssd1306_clearPage(i - 1, false);
+        ssd1306_clearPage(i - 1u, false);
     }
 } // end ssd1306_clearDisplay
 

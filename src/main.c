@@ -69,15 +69,17 @@ int main(void) {
 
   __bis_SR_register(GIE);
 
-  redraw_morse_transmission_screen();
-
   State state = {0};
+
+  redraw_morse_transmission_screen(&state);
 
   for(;;) {
     P2IE |= BIT1 | BIT2 | BIT0;
     P1IE |= BIT5;
     LPM0;
+    // Process the IO actions sent via interruptions
     const IoActions actions_to_process = io_actions;
+    // Disable button interruptions to decrease I2C comms errors
     P2IE = 0;
     P1IE = 0;
     if (state.settings_menu_open) {
@@ -86,6 +88,7 @@ int main(void) {
         process_morse_tx_menu(&state, &actions_to_process);
     }
 
+    // Clear the actions since they have been processed
     io_actions = (IoActions) { 0 };
   }
 }
