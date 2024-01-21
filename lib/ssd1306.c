@@ -114,9 +114,8 @@ void ssd1306_printChar(uint8_t x, uint8_t y, char ch, bool inverted) {
 
   uint8_t inverting_mask = inverted ? 0xFF : 0;
 
-  uint8_t i;
-  for (i = 0; i < 5; i++) {
-    buffer[i + 1] = font_5x8[ch - ' '][i] ^ inverting_mask;
+  for (uint8_t i = 0; i < 5; i++) {
+    buffer[i + 1u] = font_5x8[ch - ' '][i] ^ inverting_mask;
   }
 
   buffer[6] = inverting_mask;
