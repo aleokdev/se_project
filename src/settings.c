@@ -1,13 +1,12 @@
 #include "settings.h"
 #include "ssd1306.h"
-#include <stdio.h>
 #include <msp430.h>
+#include <stdio.h>
 
 void redraw_volume(bool hovered, bool selected);
 void redraw_tone(bool hovered, bool selected);
 void changed_volume(ReDirection dir);
 void changed_tone(ReDirection dir);
-
 
 const SettingParams setting_params[SETTINGS_COUNT] = {
     {.redraw_fn = redraw_volume, .changed_fn = changed_volume},
@@ -26,18 +25,16 @@ void redraw_tone(bool hovered, bool selected) {
   ssd1306_printText(6 * 10, 2, buffer, selected);
 }
 
-void changed_volume(ReDirection dir) {
-
-}
+void changed_volume(ReDirection dir) {}
 
 void changed_tone(ReDirection dir) {
-    if(dir == Ccw) {
-        if(TA0CCR0 < 100) {
-            TA0CCR0++;
-        }
-    } else {
-        if(TA0CCR0 > 15) {
-            TA0CCR0--;
-        }
+  if (dir == Ccw) {
+    if (TA0CCR0 < 100) {
+      TA0CCR0++;
     }
+  } else {
+    if (TA0CCR0 > 15) {
+      TA0CCR0--;
+    }
+  }
 }

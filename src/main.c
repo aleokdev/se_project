@@ -1,15 +1,15 @@
+#include "clock.h"
 #include "i2c.h"
+#include "io.h"
+#include "menus.h"
 #include "morse.h"
+#include "rotary_encoder.h"
 #include "settings.h"
 #include "ssd1306.h"
+#include "state.h"
 #include <msp430.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "rotary_encoder.h"
-#include "clock.h"
-#include "state.h"
-#include "io.h"
-#include "menus.h"
 
 // Current pin connections:
 //                      | P1.0      P2.6 |
@@ -21,7 +21,6 @@
 //  Rotary encoder butn | P2.0      P2.5 |
 // Rotary encoder "DT"  | P2.1      P2.4 |
 // Rotary encoder "CLK" | P2.2      P2.3 |
-
 
 void setup_io(void) {
   // Rotary encoder inputs
@@ -73,7 +72,7 @@ int main(void) {
 
   redraw_morse_transmission_screen(&state);
 
-  for(;;) {
+  for (;;) {
     P2IE |= BIT1 | BIT2 | BIT0;
     P1IE |= BIT5;
     LPM0;
@@ -83,12 +82,12 @@ int main(void) {
     P2IE = 0;
     P1IE = 0;
     if (state.settings_menu_open) {
-        process_settings_menu(&state, &actions_to_process);
+      process_settings_menu(&state, &actions_to_process);
     } else {
-        process_morse_tx_menu(&state, &actions_to_process);
+      process_morse_tx_menu(&state, &actions_to_process);
     }
 
     // Clear the actions since they have been processed
-    io_actions = (IoActions) { 0 };
+    io_actions = (IoActions){0};
   }
 }

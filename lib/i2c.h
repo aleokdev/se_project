@@ -14,9 +14,8 @@
  * I2C Prototype Definitions
  * ==================================================================== */
 void i2c_init(void);
-void i2c_write(unsigned char, unsigned char *, unsigned char);
+void i2c_write(unsigned char, unsigned char*, unsigned char);
 
-void i2c_read(unsigned char slave_address, unsigned char *DataBuffer,
-              unsigned char ByteCtr);
+void i2c_read(unsigned char slave_address, unsigned char* DataBuffer, unsigned char ByteCtr);
 
 #endif /* I2C_H_ */

@@ -1,8 +1,9 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include <stdbool.h>
 #include "rotary_encoder.h"
+
+#include <stdbool.h>
 
 typedef struct {
   void (*redraw_fn)(bool /* hovered */, bool /* selected */);

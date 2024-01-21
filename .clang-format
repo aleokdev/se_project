@@ -11,10 +11,10 @@ CompactNamespaces: 'false'
 Cpp11BracedListStyle: 'true'
 IndentCaseLabels: 'true'
 IndentPPDirectives: AfterHash
-IndentWidth: '4'
-Language: C
+IndentWidth: '2'
 NamespaceIndentation: None
 PointerAlignment: Left
+DerivePointerAlignment: 'false'
 SortIncludes: 'true'
 SpaceAfterTemplateKeyword: 'false'
 SpaceBeforeAssignmentOperators: 'true'
@@ -22,4 +22,4 @@ SpaceInEmptyParentheses: 'false'
 SpacesInAngles: 'false'
 SpacesInParentheses: 'false'
 SpacesInSquareBrackets: 'false'
-TabWidth: '4'
+TabWidth: '2'

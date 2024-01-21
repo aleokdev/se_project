@@ -10,9 +10,9 @@
 #define SDA BIT7 // i2c sda pin
 #define SCL BIT6 // i2c scl pin
 
-volatile unsigned char *PTxData;  // Pointer to TX data
+volatile unsigned char* PTxData;  // Pointer to TX data
 volatile unsigned char TxByteCtr; // number of bytes to TX
-volatile unsigned char *PRxData;  // Pointer to RX data
+volatile unsigned char* PRxData;  // Pointer to RX data
 volatile unsigned char RxByteCtr; // number of bytes to RX
 
 void i2c_init(void) {
@@ -21,15 +21,14 @@ void i2c_init(void) {
   UCB0CTL1 |= UCSWRST;                  // Enable SW reset
   UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC; // I2C Master, synchronous mode
   UCB0CTL1 = UCSSEL_2 + UCSWRST;        // Use SMCLK, keep SW reset
-  UCB0BR0 = 10;               // fSCL = SMCLK/10 = ~100kHz with SMCLK = 1MHz
-  UCB0BR1 = 0;                //
-  UCB0CTL1 &= ~UCSWRST;       // Clear SW reset, resume operation
-  IE2 |= UCB0RXIE | UCB0TXIE; // Enable TX & RX interrupt
+  UCB0BR0 = 10;                         // fSCL = SMCLK/10 = ~100kHz with SMCLK = 1MHz
+  UCB0BR1 = 0;                          //
+  UCB0CTL1 &= ~UCSWRST;                 // Clear SW reset, resume operation
+  IE2 |= UCB0RXIE | UCB0TXIE;           // Enable TX & RX interrupt
 
 } // end i2c_init
 
-void i2c_write(unsigned char slave_address, unsigned char *DataBuffer,
-               unsigned char ByteCtr) {
+void i2c_write(unsigned char slave_address, unsigned char* DataBuffer, unsigned char ByteCtr) {
   UCB0I2CSA = slave_address;
 
   PTxData = DataBuffer;
@@ -44,8 +43,7 @@ void i2c_write(unsigned char slave_address, unsigned char *DataBuffer,
                                    // Remain in LPM0 until all data is TX'd
 }
 
-void i2c_read(unsigned char slave_address, unsigned char *DataBuffer,
-              unsigned char ByteCtr) {
+void i2c_read(unsigned char slave_address, unsigned char* DataBuffer, unsigned char ByteCtr) {
   UCB0I2CSA = slave_address;
 
   PRxData = DataBuffer;

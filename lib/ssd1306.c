@@ -42,9 +42,9 @@ void ssd1306_init(void) {
   ssd1306_command(0x0);                        // no offset
   ssd1306_command(SSD1306_SETSTARTLINE | 0x0); // line #0
   ssd1306_command(SSD1306_CHARGEPUMP);         // 0x8D
-  ssd1306_command(0x14); // generate high voltage from 3.3v line internally
-  ssd1306_command(SSD1306_MEMORYMODE); // 0x20
-  ssd1306_command(0x00);               // 0x0 act like ks0108
+  ssd1306_command(0x14);                       // generate high voltage from 3.3v line internally
+  ssd1306_command(SSD1306_MEMORYMODE);         // 0x20
+  ssd1306_command(0x00);                       // 0x0 act like ks0108
   ssd1306_command(SSD1306_SEGREMAP | 0x1);
   ssd1306_command(SSD1306_COMSCANDEC);
 
@@ -73,9 +73,7 @@ void ssd1306_command(unsigned char command) {
 } // end ssd1306_command
 
 void ssd1306_clearDisplay(void) {
-    for(uint8_t i = 8; i > 0; i--) {
-        ssd1306_clearPage(i - 1u, false);
-    }
+  for (uint8_t i = 8; i > 0; i--) { ssd1306_clearPage(i - 1u, false); }
 } // end ssd1306_clearDisplay
 
 void ssd1306_setPosition(uint8_t column, uint8_t page) {
@@ -96,8 +94,10 @@ void ssd1306_setPosition(uint8_t column, uint8_t page) {
   ssd1306_command(7);    // Page end address
 } // end ssd1306_setPosition
 
-void ssd1306_setDrawingRect(uint8_t start_column, uint8_t start_page,
-                            uint8_t end_column, uint8_t end_page) {
+void ssd1306_setDrawingRect(uint8_t start_column,
+                            uint8_t start_page,
+                            uint8_t end_column,
+                            uint8_t end_page) {
   ssd1306_command(SSD1306_COLUMNADDR);
   ssd1306_command(start_column); // Column start address (0 = reset)
   ssd1306_command(end_column);   // Column end address (127 = reset)
@@ -114,9 +114,7 @@ void ssd1306_printChar(uint8_t x, uint8_t y, char ch, bool inverted) {
 
   uint8_t inverting_mask = inverted ? 0xFF : 0;
 
-  for (uint8_t i = 0; i < 5; i++) {
-    buffer[i + 1u] = font_5x8[ch - ' '][i] ^ inverting_mask;
-  }
+  for (uint8_t i = 0; i < 5; i++) { buffer[i + 1u] = font_5x8[ch - ' '][i] ^ inverting_mask; }
 
   buffer[6] = inverting_mask;
 
@@ -132,11 +130,10 @@ void ssd1306_printChar2x(uint8_t x, uint8_t y, char ch, bool inverted) {
 
   for (uint8_t i = 0; i < 10; i++) {
     uint8_t column = font_5x8[ch - ' '][i >> 1] ^ inverting_mask;
-    uint8_t upper_half_2x =
-        (column & 0b0001) | ((column & 0b0001) << 1) |
-        ((column & 0b0010) << 1) | ((column & 0b0010) << 2) |
-        ((column & 0b0100) << 2) | ((column & 0b0100) << 3) |
-        ((column & 0b1000) << 3) | ((column & 0b1000) << 4);
+    uint8_t upper_half_2x = (column & 0b0001) | ((column & 0b0001) << 1) |
+                            ((column & 0b0010) << 1) | ((column & 0b0010) << 2) |
+                            ((column & 0b0100) << 2) | ((column & 0b0100) << 3) |
+                            ((column & 0b1000) << 3) | ((column & 0b1000) << 4);
     buffer[i + 1] = upper_half_2x;
   }
 
@@ -144,11 +141,10 @@ void ssd1306_printChar2x(uint8_t x, uint8_t y, char ch, bool inverted) {
 
   for (uint8_t i = 0; i < 10; i++) {
     uint8_t column = (font_5x8[ch - ' '][i >> 1] ^ inverting_mask) >> 4;
-    uint8_t lower_half_2x =
-        (column & 0b0001) | ((column & 0b0001) << 1) |
-        ((column & 0b0010) << 1) | ((column & 0b0010) << 2) |
-        ((column & 0b0100) << 2) | ((column & 0b0100) << 3) |
-        ((column & 0b1000) << 3) | ((column & 0b1000) << 4);
+    uint8_t lower_half_2x = (column & 0b0001) | ((column & 0b0001) << 1) |
+                            ((column & 0b0010) << 1) | ((column & 0b0010) << 2) |
+                            ((column & 0b0100) << 2) | ((column & 0b0100) << 3) |
+                            ((column & 0b1000) << 3) | ((column & 0b1000) << 4);
     buffer[i + 12] = lower_half_2x;
   }
 
@@ -161,8 +157,7 @@ void ssd1306_stopScroll() {
   ssd1306_command(0x2E); // Deactivate scrolling
 }
 
-void ssd1306_startHorzScroll(uint8_t start_page, uint8_t end_page,
-                             uint8_t time_interval) {
+void ssd1306_startHorzScroll(uint8_t start_page, uint8_t end_page, uint8_t time_interval) {
   ssd1306_command(0x2E); // Deactivate scrolling
 
   ssd1306_command(0x26);
@@ -181,12 +176,10 @@ void ssd1306_clearPage(uint8_t page, bool value) {
 
   buffer[0] = 0x40;                // Upload data
   buffer[1] = value ? 0xFF : 0x00; // Empty column
-  for (uint8_t i = SSD1306_LCDWIDTH; i > 0; i--) {
-    i2c_write(SSD1306_I2C_ADDRESS, buffer, 2);
-  }
+  for (uint8_t i = SSD1306_LCDWIDTH; i > 0; i--) { i2c_write(SSD1306_I2C_ADDRESS, buffer, 2); }
 }
 
-void ssd1306_printText(uint8_t x, uint8_t y, char *ptString, bool inverted) {
+void ssd1306_printText(uint8_t x, uint8_t y, char* ptString, bool inverted) {
   ssd1306_setPosition(x, y);
 
   while (*ptString != '\0') {
@@ -203,8 +196,7 @@ void ssd1306_printText(uint8_t x, uint8_t y, char *ptString, bool inverted) {
   }
 } // end ssd1306_printText
 
-void ssd1306_printTextBlock(uint8_t x, uint8_t y, char *ptString,
-                            bool inverted) {
+void ssd1306_printTextBlock(uint8_t x, uint8_t y, char* ptString, bool inverted) {
   char word[12];
   uint8_t i;
   uint8_t endX = x;
@@ -237,8 +229,7 @@ void ssd1306_printTextBlock(uint8_t x, uint8_t y, char *ptString,
   }
 }
 
-void ssd1306_printUI32(uint8_t x, uint8_t y, uint32_t val, uint8_t Hcenter,
-                       bool inverted) {
+void ssd1306_printUI32(uint8_t x, uint8_t y, uint32_t val, uint8_t Hcenter, bool inverted) {
   char text[14];
 
   ultoa(val, text);
@@ -273,7 +264,7 @@ uint8_t digits(uint32_t n) {
   }
 } // end digits
 
-void ultoa(uint32_t val, char *string) {
+void ultoa(uint32_t val, char* string) {
   uint8_t i = 0;
   uint8_t j = 0;
   // use do loop to convert val to string
@@ -283,14 +274,14 @@ void ultoa(uint32_t val, char *string) {
       j = 0;             // reset separator indexer thingy
     }
     string[i++] = val % 10 + '0'; // add the ith digit to the number string
-    j++; // increment counter to keep track of separator placement
+    j++;                          // increment counter to keep track of separator placement
   } while ((val /= 10) > 0);
 
   string[i++] = '\0'; // add termination to string
   reverse(string);    // string was built in reverse, fix that
 } // end ultoa
 
-void reverse(char *s) {
+void reverse(char* s) {
   uint8_t i, j;
   uint8_t c;
 

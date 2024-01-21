@@ -86,20 +86,21 @@ void ssd1306_init(void);
 void ssd1306_command(unsigned char);
 void ssd1306_clearDisplay(void);
 void ssd1306_setPosition(uint8_t, uint8_t);
-void ssd1306_setDrawingRect(uint8_t start_column, uint8_t start_page,
-                            uint8_t end_column, uint8_t end_page);
+void ssd1306_setDrawingRect(uint8_t start_column,
+                            uint8_t start_page,
+                            uint8_t end_column,
+                            uint8_t end_page);
 void ssd1306_stopScroll();
-void ssd1306_startHorzScroll(uint8_t start_page, uint8_t end_page,
-                             uint8_t time_interval);
+void ssd1306_startHorzScroll(uint8_t start_page, uint8_t end_page, uint8_t time_interval);
 void ssd1306_clearPage(uint8_t page, bool value);
 void ssd1306_printChar(uint8_t, uint8_t, char, bool inverted);
 void ssd1306_printChar2x(uint8_t, uint8_t, char, bool inverted);
-void ssd1306_printText(uint8_t, uint8_t, char *, bool inverted);
-void ssd1306_printTextBlock(uint8_t, uint8_t, char *, bool inverted);
+void ssd1306_printText(uint8_t, uint8_t, char*, bool inverted);
+void ssd1306_printTextBlock(uint8_t, uint8_t, char*, bool inverted);
 void ssd1306_printUI32(uint8_t, uint8_t, uint32_t, uint8_t, bool inverted);
 
 uint8_t digits(uint32_t);
-void ultoa(uint32_t, char *);
-void reverse(char *);
+void ultoa(uint32_t, char*);
+void reverse(char*);
 
 #endif /* SSD1306_H_ */

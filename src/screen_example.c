@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #define OLED_PWR BIT0 // OLED power connect/disconnect on pin P1.0
 
 #define ANUMBER 19052019
@@ -60,9 +59,8 @@ int main(void) {
     // Print Unsigned 32 bit number
     // =========================================
     ssd1306_printUI32(0, 1, ANUMBER, HCENTERUL_OFF); // Print number on line 1
-    ssd1306_printUI32(
-        0, 2, ANUMBER,
-        HCENTERUL_ON); // Print number on line 2, horizontally centered
+    ssd1306_printUI32(0, 2, ANUMBER,
+                      HCENTERUL_ON); // Print number on line 2, horizontally centered
 
     // Print counting on line 6 horizontally centered
     uint32_t i = 1;
