@@ -43,11 +43,17 @@ void setup_io(void) {
   P1DIR |= BIT2;
   P1SEL |= BIT2;
   P1SEL2 &= ~BIT2;
+
+  P2DIR |= BIT6;
+  P2SEL |= BIT6;
+  P2SEL &= ~BIT7;
+  P2SEL2 &= ~(BIT6 | BIT7);
+
+  P1OUT &= ~BIT2;
   TA0CCTL0 = 0;
   TA0CCTL1 = OUTMOD_7;      // PWM reset/set
   TA0CCR0 = 0;              // Turn it off
   TA0CTL = TASSEL_1 | MC_1; // ACLK (12kHz), do not divide, up to CCR0
-  TA0CCR1 = 9;              // Initial duty cycle 50%
 
   // Use timer 1 for morse dit/dah classification & knowing when to start new
   // letter

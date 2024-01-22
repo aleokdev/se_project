@@ -30,12 +30,12 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
   if (actions->pressed_encoder) {
     state->settings_menu_open = true;
     redraw_settings_screen(state);
+    silence_tone();
     return;
   }
 
   if (actions->pressed_morse_button) {
-      // Turn on buzzer
-      TA0CCR0 = tone_value;
+      output_tone(tone_value);
       // Set up timer for 'dah' detection
       setup_timer(dah_time);
 
@@ -52,8 +52,7 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
       }
   }
   if (actions->released_morse_button && TA0CCR0) {
-      // Turn off buzzer
-      TA0CCR0 = 0;
+      silence_tone();
       // Setup next character timer
       setup_timer(dah_time);
       state->current_morse_element++;

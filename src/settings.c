@@ -7,6 +7,8 @@
 uint16_t tone_value = 19;
 // Default dah time: 200 / 1500 * 1000 = 130ms
 uint16_t dah_time = 199;
+// Default tone volume: About half-way
+uint16_t tone_volume = 3;
 
 void redraw_volume(bool hovered, bool selected);
 void redraw_tone(bool hovered, bool selected);
@@ -22,7 +24,8 @@ const SettingParams setting_params[SETTINGS_COUNT] = {
 
 void redraw_volume(bool hovered, bool selected) {
   ssd1306_printText(0, 1, "  Volumen", hovered);
-  ssd1306_printText(6 * 10, 1, "------*--", selected);
+  ssd1306_printText(6 * 10, 1, "-------", selected);
+  ssd1306_printChar(6 * 10 + tone_volume * 6, 1, '*', selected);
 }
 
 void redraw_tone(bool hovered, bool selected) {
@@ -41,7 +44,17 @@ void redraw_dah_time(bool hovered, bool selected) {
   ssd1306_printText(6 * 10, 3, buffer, selected);
 }
 
-void changed_volume(ReDirection dir) {}
+void changed_volume(ReDirection dir) {
+    if (dir == Cw) {
+      if (tone_volume < 7) {
+          tone_volume++;
+      }
+    } else {
+      if (tone_volume > 0) {
+          tone_volume--;
+      }
+    }
+}
 
 void changed_tone(ReDirection dir) {
   if (dir == Ccw) {

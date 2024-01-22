@@ -29,3 +29,6 @@ inline void setup_timer(uint16_t time) {
     TA1CCR0 = time;
     TA1CTL &= ~TACLR;
 }
+
+void output_tone(uint16_t tone_time);
+void silence_tone(void);

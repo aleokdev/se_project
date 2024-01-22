@@ -1,5 +1,7 @@
 #include "io.h"
 
+#include "settings.h"
+
 #include <msp430.h>
 
 volatile IoActions io_actions = {0};
@@ -52,4 +54,19 @@ __interrupt void p2v() {
   }
   P2IFG = 0;
   LPM0_EXIT;
+}
+
+
+void output_tone(uint16_t tone_time) {
+    TA0CCR0 = tone_value;
+    TA0CCR1 = (tone_value >> 4) * tone_volume;
+    // Re-enable the PWM output: Set pin when TAR==T0CCR1, reset when TAR==T0CCR0
+    TA0CCTL1 = OUTMOD_7;
+}
+
+void silence_tone(void) {
+    // Reset the tone timer
+    TA0CCR0 = 0;
+    // Avoid leaving the PWM output on to prevent noise (set the PWM pins to PxOUT, which are 0)
+    TA0CCTL1 = OUTMOD_0;
 }
