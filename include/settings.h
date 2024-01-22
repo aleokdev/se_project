@@ -10,7 +10,7 @@ typedef struct {
   void (*changed_fn)(ReDirection /* direction the rotary encoder has been rotated towards */);
 } SettingParams;
 
-#define SETTINGS_COUNT 3
+#define SETTINGS_COUNT 4
 
 extern const SettingParams setting_params[SETTINGS_COUNT];
 
