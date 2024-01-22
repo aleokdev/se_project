@@ -37,7 +37,7 @@ void redraw_output_sel(bool hovered, bool selected) {
 
 void redraw_volume(bool hovered, bool selected) {
   ssd1306_printText(0, 2, "  Volumen", hovered);
-  ssd1306_printText(6 * 10, 2, "-------", selected);
+  ssd1306_printText(6 * 10, 2, "--------", selected);
   ssd1306_printChar(6 * 10 + tone_volume * 6, 2, '*', selected);
 }
 
