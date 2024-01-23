@@ -7,6 +7,7 @@
 #include "settings.h"
 #include "ssd1306.h"
 #include "state.h"
+#include "menus.h"
 #include <msp430.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -92,10 +93,18 @@ int main(void) {
     // Disable button interruptions to decrease I2C comms errors
     P2IE = 0;
     P1IE = 0;
-    if (state.settings_menu_open) {
-      process_settings_menu(&state, &actions_to_process);
-    } else {
-      process_morse_tx_menu(&state, &actions_to_process);
+    switch(state.menu_open) {
+    case Menu_MorseTx:
+        process_morse_tx_menu(&state, &actions_to_process);
+        break;
+
+    case Menu_Settings:
+        process_settings_menu(&state, &actions_to_process);
+        break;
+
+    case Menu_MorseTable:
+        process_morse_table_menu(&state, &actions_to_process);
+        break;
     }
 
     // Clear the actions since they have been processed

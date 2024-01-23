@@ -35,9 +35,14 @@ typedef enum {
 void process_morse_tx_menu(State* state, const IoActions* actions) {
   static TimerReason last_timer_reason;
   const TimerReason timer_reason = last_timer_reason;
-  if (actions->rotated_encoder && actions->encoder_direction == Ccw && is_encoder_pressed()) {
-    state->settings_menu_open = true;
-    redraw_settings_screen(state);
+  if (actions->rotated_encoder && is_encoder_pressed()) {
+      if (actions->encoder_direction == Ccw) {
+          state->menu_open = Menu_Settings;
+          redraw_settings_screen(state);
+      } else {
+          state->menu_open = Menu_MorseTable;
+          redraw_morse_table_screen(state);
+      }
     silence_tone();
     return;
   }

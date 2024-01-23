@@ -1,5 +1,7 @@
 #pragma once
 
+#include "menus.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -15,7 +17,7 @@ typedef struct {
   // Current element within the character being sent right now
   uint8_t current_morse_element;
 
-  bool settings_menu_open;
+  Menu menu_open;
   uint8_t setting_hovered;
   bool setting_is_selected;
 } State;

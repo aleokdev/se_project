@@ -22,7 +22,7 @@ void process_settings_menu(State* state, const IoActions* actions) {
   // Close the settings menu if the morse button is pressed, and deselect any
   // option chosen
   if (actions->pressed_morse_button) {
-    state->settings_menu_open = false;
+    state->menu_open = Menu_MorseTx;
     state->setting_is_selected = false;
     redraw_morse_transmission_screen(state);
     return;

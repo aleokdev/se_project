@@ -1,6 +1,6 @@
 #include "morse.h"
 
-const static uint16_t morse_characters[26] = {
+const uint16_t morse_characters[26] = {
     (2 << 8) | 0b10,   // A
     (4 << 8) | 0b0001, // B
     (4 << 8) | 0b0101, // C
