@@ -21,7 +21,6 @@ void redraw_message_buffer(const State* state) {
 void redraw_morse_transmission_screen(const State* state) {
   ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
-  ssd1306_clearPage(7, true);
   ssd1306_printText(2, 0, "Transmisor", true);
   redraw_message_buffer(state);
 }
@@ -58,7 +57,7 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
 
   if (actions->pressed_morse_button) {
       output_tone(tone_value);
-      ssd1306_printChar(state->current_morse_element << 3, 7, '.', true);
+      ssd1306_printChar(127-5*6 + (state->current_morse_element << 3), 0, '.', true);
 
       // Set up timer for 'dah' detection
       last_timer_reason = TimerReason_Dah;
@@ -98,7 +97,7 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
 
       case TimerReason_Dah: {
           state->morse_buffer |= 1 << state->current_morse_element;
-          ssd1306_printChar(state->current_morse_element << 3, 7, '-', true);
+          ssd1306_printChar(127-5*6 + (state->current_morse_element << 3), 0, '-', true);
 
           char translated_char =
               translate_morse(state->current_morse_element, state->morse_buffer);
@@ -134,5 +133,5 @@ void skip_to_next_msg_char(State* state) {
     }
     state->current_morse_element = 0;
     state->morse_buffer = 0;
-    ssd1306_clearPage(7, true);
+    ssd1306_printText(127-5*6, 0, "     ", true);
 }
