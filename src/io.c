@@ -15,7 +15,13 @@ __interrupt void int_T1_0(void) {
 
 #pragma vector = PORT1_VECTOR
 __interrupt void p1v() {
-    io_actions.pressed_encoder = true;
+    static bool is_encoder_pressed = false;
+    // Change interrupt edge select to call interrupt when the button is
+    // released/pressed next time
+    is_encoder_pressed = !is_encoder_pressed;
+    io_actions.pressed_encoder = is_encoder_pressed;
+    io_actions.released_encoder = !is_encoder_pressed;
+    P1IES ^= BIT4;
 
     P1IFG = 0;
     LPM0_EXIT;
@@ -69,4 +75,8 @@ void silence_tone(void) {
     TA0CCR0 = 0;
     // Avoid leaving the PWM output on to prevent noise (set the PWM pins to PxOUT, which are 0)
     TA0CCTL1 = OUTMOD_0;
+}
+
+bool is_encoder_pressed(void) {
+    return !(P1IN & BIT4);
 }

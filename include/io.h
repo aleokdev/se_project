@@ -11,6 +11,7 @@ typedef struct {
   bool rotated_encoder : 1;
   ReDirection encoder_direction : 1;
   bool pressed_encoder : 1;
+  bool released_encoder : 1;
 
   bool pressed_morse_button : 1;
   bool released_morse_button : 1;
@@ -30,5 +31,11 @@ inline void setup_timer(uint16_t time) {
     TA1CTL &= ~TACLR;
 }
 
+inline bool is_timer_setup(void) {
+    return TA1CCR0;
+}
+
 void output_tone(uint16_t tone_time);
 void silence_tone(void);
+
+bool is_encoder_pressed(void);
