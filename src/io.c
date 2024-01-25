@@ -7,7 +7,7 @@
 volatile IoActions io_actions = {0};
 uint8_t lpm_counter = 0;
 // About 30s of inactive time
-uint8_t lpm_trigger = 93;
+uint8_t lpm_trigger = 11;
 
 #pragma vector = WDT_VECTOR
 __interrupt void int_wdt(void) {
