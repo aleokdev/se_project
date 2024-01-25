@@ -5,12 +5,33 @@
 #include <msp430.h>
 
 volatile IoActions io_actions = {0};
+uint8_t lpm_counter = 0;
+// About 30s of inactive time
+uint8_t lpm_trigger = 93;
+
+#pragma vector = WDT_VECTOR
+__interrupt void int_wdt(void) {
+    if(++lpm_counter > lpm_trigger) {
+        io_actions.low_power_mode_requested = true;
+        LPM4_EXIT;
+    }
+}
+
+void lpm_reset_time(void) {
+    lpm_counter = 0;
+    WDTCTL = WDTPW | WDTTMSEL | WDTSSEL | WDTCNTCL ; // Interval mode, ACLK (12kHz) / 32768, clear counter
+    WDTCTL = WDTPW | WDTTMSEL | WDTSSEL ; // Interval mode, ACLK (12kHz) / 32768
+}
+
+void lpm_set_interval(uint8_t time) {
+    lpm_trigger = time;
+}
 
 #pragma vector = TIMER1_A0_VECTOR
 __interrupt void int_T1_0(void) {
   io_actions.timer1_finished = true;
   TA1CCR0 = 0;
-  LPM0_EXIT;
+  LPM4_EXIT;
 }
 
 #pragma vector = PORT1_VECTOR
@@ -24,7 +45,7 @@ __interrupt void p1v() {
     P1IES ^= BIT4;
 
     P1IFG = 0;
-    LPM0_EXIT;
+    LPM4_EXIT;
 }
 
 #pragma vector = PORT2_VECTOR
@@ -59,7 +80,7 @@ __interrupt void p2v() {
     io_actions.rotated_encoder = true;
   }
   P2IFG = 0;
-  LPM0_EXIT;
+  LPM4_EXIT;
 }
 
 

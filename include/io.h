@@ -16,6 +16,7 @@ typedef struct {
   bool pressed_morse_button : 1;
   bool released_morse_button : 1;
   bool timer1_finished : 1;
+  bool low_power_mode_requested : 1;
 } IoActions;
 extern volatile IoActions io_actions;
 
@@ -39,3 +40,11 @@ void output_tone(uint16_t tone_time);
 void silence_tone(void);
 
 bool is_encoder_pressed(void);
+
+// LPM (Low Power Mode) functions
+
+// Resets the time counter to enable LPM
+void lpm_reset_time(void);
+
+// Sets the amount of time needed to trigger LPM, given in number of 366ms periods
+void lpm_set_interval(uint8_t time);

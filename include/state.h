@@ -20,4 +20,6 @@ typedef struct {
   Menu menu_open;
   uint8_t setting_hovered;
   bool setting_is_selected;
+
+  bool in_low_power_mode;
 } State;

@@ -66,6 +66,11 @@ void setup_io(void) {
   TA1CCR0 = 0;                     // Halt timer
   TA1CCTL0 = CCIE;                 // Interrupt when timer reaches value at CCR0
 
+  // Use watchdog timer to enter low-power mode after 1min
+  WDTCTL = WDTPW | WDTTMSEL | WDTHOLD | WDTCNTCL ; // Interval mode, halt timer, clear counter
+  WDTCTL = WDTPW | WDTTMSEL | WDTSSEL ; // Interval mode, ACLK (12kHz) / 32768
+  IE1 |= WDTIE;                         // Enable interrupts
+
   // Initialize I2C to use with OLED display (Pins 1.6, 1.7)
   i2c_init();
 
@@ -85,9 +90,24 @@ int main(void) {
   redraw_morse_transmission_screen(&state);
 
   for (;;) {
+    // Re-enable button interrupts
     P2IE |= BIT1 | BIT2 | BIT5;
     P1IE |= BIT4;
-    LPM0;
+
+    // Sleep (either deeply if in LPM or on mode 0 otherwise) until an interruption is received
+    if(state.in_low_power_mode) {
+        ssd1306_command(SSD1306_DISPLAYOFF);
+        LPM4;
+
+        // Got woken up, turn on the display and disable LPM
+        ssd1306_command(SSD1306_DISPLAYON);
+        state.in_low_power_mode = false;
+    } else {
+        LPM0;
+    }
+    // Got waken up, reset the low power mode time to go asleep
+    lpm_reset_time();
+
     // Process the IO actions sent via interruptions
     const IoActions actions_to_process = io_actions;
     // Disable button interruptions to decrease I2C comms errors
@@ -107,6 +127,9 @@ int main(void) {
         break;
     }
 
+    if(io_actions.low_power_mode_requested) {
+        state.in_low_power_mode = true;
+    }
     // Clear the actions since they have been processed
     io_actions = (IoActions){0};
   }
