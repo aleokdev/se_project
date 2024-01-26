@@ -21,6 +21,9 @@ typedef struct {
 } IoActions;
 extern volatile IoActions io_actions;
 
+void setup_clocks(void);
+void setup_io(void);
+
 inline void reset_timer(void) {
     TA1CCR0 = 0;
     TA1CTL |= TACLR;
