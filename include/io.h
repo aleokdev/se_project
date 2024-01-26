@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rotary_encoder.h"
+#include "settings.h"
 
 #include <msp430.h>
 
@@ -36,7 +37,9 @@ inline bool is_timer_setup(void) {
     return TA1CCR0;
 }
 
-void output_tone(uint16_t tone_time);
+// Change the tone output used for the one given, disabling the other one
+void config_morse_output(MorseOutput);
+void play_tone(uint16_t tone_time);
 void silence_tone(void);
 
 bool is_encoder_pressed(void);

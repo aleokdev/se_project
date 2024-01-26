@@ -1,114 +1,49 @@
 #include "settings.h"
-#include "ssd1306.h"
-#include <msp430.h>
-#include <stdio.h>
 
-// Default tone frequency: 12000 / 20 = 600 Hz
-uint16_t tone_value = 19;
-// Default dah time: 200 / 1500 * 1000 = 130ms
-uint16_t dah_time = 199;
-// Default tone volume: About half-way
-uint16_t tone_volume = 3;
+#include "msp430.h"
 
-void redraw_output_sel(bool hovered, bool selected);
-void redraw_volume(bool hovered, bool selected);
-void redraw_tone(bool hovered, bool selected);
-void redraw_dah_time(bool hovered, bool selected);
-void changed_output_sel(ReDirection dir);
-void changed_volume(ReDirection dir);
-void changed_tone(ReDirection dir);
-void changed_dah_time(ReDirection dir);
+#define DEFAULT_SETTINGS (Settings) {                 \
+    /* Default tone frequency: 12000 / 20 = 600 Hz */ \
+    .tone_value = 19,                                 \
+    /* Default tone volume: About half-way */         \
+    .tone_volume = 3,                                 \
+    /* Default dah time: 200 / 1500 * 1000 = 130ms */ \
+    .dah_time = 199                                   \
+}
 
-const SettingParams setting_params[SETTINGS_COUNT] = {
-    {.redraw_fn = redraw_output_sel, .changed_fn = changed_output_sel},
-    {.redraw_fn = redraw_volume, .changed_fn = changed_volume},
-    {.redraw_fn = redraw_tone, .changed_fn = changed_tone},
-    {.redraw_fn = redraw_dah_time, .changed_fn = changed_dah_time}};
+Settings settings = DEFAULT_SETTINGS;
 
-void redraw_output_sel(bool hovered, bool selected) {
-    ssd1306_clearPage(1, false);
-    ssd1306_printText(0, 1, "   Salida", hovered);
-    if(P2DIR & BIT6) {
-        ssd1306_printText(6 * 10, 1, "Buzzer", selected);
+void reset_settings(void) {
+    settings = DEFAULT_SETTINGS;
+}
+
+#define SETTINGS_PASSWORD 87
+#define PASSWORD_ADDR (void*)(0x1080)
+#define SETTINGS_ADDR (void*)(0x1080+2)
+_Static_assert((uint16_t)SETTINGS_ADDR+sizeof(settings) < 0x10BF, "Settings struct does not fit in Flash Segment B");
+
+void load_settings(void) {
+    if(*(uint8_t*)PASSWORD_ADDR != SETTINGS_PASSWORD) {
+        // Password bits set on segment B of the Flash Information Memory.
+        // If these aren't equal to SETTINGS_PASSWORD, it means that setting values haven't
+        // been initialized, so we shouldn't read them.
+        reset_settings();
     } else {
-        ssd1306_printText(6 * 10, 1, "3.5mm Aux", selected);
+        // Read settings
+        memcpy(&settings, SETTINGS_ADDR, sizeof(settings));
     }
 }
 
-void redraw_volume(bool hovered, bool selected) {
-  ssd1306_printText(0, 2, "  Volumen", hovered);
-  ssd1306_printText(6 * 10, 2, "--------", selected);
-  ssd1306_printChar(6 * 10 + tone_volume * 6, 2, '*', selected);
-}
-
-void redraw_tone(bool hovered, bool selected) {
-  ssd1306_printText(0, 3, "     Tono", hovered);
-  const uint16_t tone = 12000 / (tone_value + 1);
-  char buffer[16];
-  snprintf(buffer, 16, "%d Hz", tone);
-  ssd1306_printText(6 * 10, 3, buffer, selected);
-  if(selected) {
-    output_tone(tone_value);
-  } else {
-    silence_tone();
-  }
-}
-
-void redraw_dah_time(bool hovered, bool selected) {
-  ssd1306_printText(0, 4, "Velocidad", hovered);
-  const uint16_t speed = (dah_time + 1) * 10 / 15;
-  char buffer[16];
-  snprintf(buffer, 16, "%d ms/dah", speed);
-  ssd1306_printText(6 * 10, 4, buffer, selected);
-}
-
-void changed_output_sel(ReDirection dir) {
-    if (dir == Cw) {
-        // Buzzer
-        P2DIR |= BIT6;
-        P1DIR &= ~BIT2;
-    } else {
-        // Aux
-        P1DIR |= BIT2;
-        P2DIR &= ~BIT6;
-    }
-
-}
-
-void changed_volume(ReDirection dir) {
-    if (dir == Cw) {
-      if (tone_volume < 7) {
-          tone_volume++;
-      }
-    } else {
-      if (tone_volume > 0) {
-          tone_volume--;
-      }
-    }
-}
-
-void changed_tone(ReDirection dir) {
-  if (dir == Ccw) {
-    if (tone_value < 100) {
-        tone_value++;
-    }
-  } else {
-    if (tone_value > 15) {
-        tone_value--;
-    }
-  }
-
-  output_tone(tone_value);
-}
-
-void changed_dah_time(ReDirection dir) {
-    if (dir == Cw) {
-      if (dah_time < 1000) {
-          dah_time++;
-      }
-    } else {
-      if (dah_time > 1) {
-          dah_time--;
-      }
-    }
+void save_settings(void) {
+    // First erase the data currently present in segment B
+    FCTL1 = FWKEY | ERASE;       // Erase individual segment only
+    FCTL2 = FWKEY | FSSEL_1 | 35;// MCLK (16 MHz), divide by 35: ~457kHz
+    FCTL3 = FWKEY | LOCKA;       // Disable flash-wide write lock, enable segment A lock for safety purposes
+    *(uint8_t*)PASSWORD_ADDR = 0;// Clear segment B
+    // Now save the current settings
+    FCTL1 = FWKEY | WRT;         // Do not erase, bit/byte/word write mode
+    *(uint8_t*)PASSWORD_ADDR = SETTINGS_PASSWORD; // Write settings password
+    memcpy(SETTINGS_ADDR, &settings, sizeof(settings)); // Write settings
+    FCTL1 = FWKEY;               // Do not erase, write disabled
+    FCTL3 = FWKEY | LOCK;        // Enable flash-wide write lock
 }

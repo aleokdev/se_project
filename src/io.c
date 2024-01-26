@@ -83,12 +83,17 @@ __interrupt void p2v() {
   LPM4_EXIT;
 }
 
-
-void output_tone(uint16_t tone_time) {
-    TA0CCR0 = tone_value;
-    TA0CCR1 = (tone_value >> 4) * tone_volume;
-    // Re-enable the PWM output: Set pin when TAR==T0CCR1, reset when TAR==T0CCR0
-    TA0CCTL1 = OUTMOD_7;
+void config_morse_output(MorseOutput output) {
+    switch(output) {
+    case MorseOutput_Aux:
+        P2DIR &= BIT6;  // Disable buzzer output
+        P1DIR |= BIT2;  // Enable aux output
+        break;
+    case MorseOutput_Buzzer:
+        P2DIR |= BIT6;  // Enable buzzer output
+        P1DIR &= BIT2;  // Disable aux output
+        break;
+    }
 }
 
 void silence_tone(void) {
@@ -96,6 +101,13 @@ void silence_tone(void) {
     TA0CCR0 = 0;
     // Avoid leaving the PWM output on to prevent noise (set the PWM pins to PxOUT, which are 0)
     TA0CCTL1 = OUTMOD_0;
+}
+
+void play_tone(uint16_t tone_time) {
+    TA0CCR0 = tone_time;
+    TA0CCR1 = (tone_time >> 4) * settings.tone_volume;
+    // Re-enable the PWM output: Set pin when TAR==T0CCR1, reset when TAR==T0CCR0
+    TA0CCTL1 = OUTMOD_7;
 }
 
 bool is_encoder_pressed(void) {

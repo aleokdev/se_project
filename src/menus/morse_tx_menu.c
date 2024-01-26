@@ -41,18 +41,18 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
   }
 
   if (actions->pressed_morse_button) {
-      output_tone(tone_value);
+      play_tone(settings.tone_value);
       ssd1306_printChar(127-5*6 + (state->current_morse_element << 3), 0, '.', true);
 
       // Set up timer for 'dah' detection
       last_timer_reason = TimerReason_Dah;
-      setup_timer(dah_time);
+      setup_timer(settings.dah_time);
   }
   if (actions->released_morse_button && TA0CCR0) {
       silence_tone();
       // Setup next character timer
       last_timer_reason = TimerReason_NextChar;
-      setup_timer(dah_time);
+      setup_timer(settings.dah_time);
       state->current_morse_element++;
 
       char translated_char =

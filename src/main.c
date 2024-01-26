@@ -45,14 +45,14 @@ void setup_io(void) {
   P2IES |= BIT5; // Interrupt on morse button press (falling edge)
 
   // Buzzer PWM, use timer 0
-  P2DIR |= BIT6;
   P2SEL |= BIT6;
   P2SEL &= ~BIT7;
   P2SEL2 &= ~(BIT6 | BIT7);
-
-  P1DIR &= BIT2;  // Disable aux output, but configure it
+  // Aux config
   P1SEL |= BIT2;
   P1SEL2 &= ~BIT2;
+  // Select the appropiate output depending on the settings
+  config_morse_output(settings.output);
 
   P1OUT &= ~BIT2;
   TA0CCTL0 = 0;
@@ -81,6 +81,9 @@ void setup_io(void) {
 int main(void) {
   WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
   Set_Clk(16);
+
+  load_settings();
+
   setup_io();
 
   __bis_SR_register(GIE);
