@@ -95,8 +95,8 @@ void ssd1306_startHorzScroll(uint8_t start_page, uint8_t end_page, uint8_t time_
 void ssd1306_clearPage(uint8_t page, bool value);
 void ssd1306_printChar(uint8_t, uint8_t, char, bool inverted);
 void ssd1306_printChar2x(uint8_t, uint8_t, char, bool inverted);
-void ssd1306_printText(uint8_t, uint8_t, char*, bool inverted);
-void ssd1306_printTextBlock(uint8_t, uint8_t, char*, bool inverted);
+void ssd1306_printText(uint8_t, uint8_t, const char*, bool inverted);
+void ssd1306_printTextBlock(uint8_t, uint8_t, const char*, bool inverted);
 void ssd1306_printUI32(uint8_t, uint8_t, uint32_t, uint8_t, bool inverted);
 
 uint8_t digits(uint32_t);

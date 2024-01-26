@@ -26,7 +26,6 @@ void redraw_morse_transmission_screen(const State* state) {
 }
 
 typedef enum {
-    TimerReason_RemoveLastChar,
     TimerReason_Dah,
     TimerReason_NextChar
 } TimerReason;
@@ -34,25 +33,11 @@ typedef enum {
 void process_morse_tx_menu(State* state, const IoActions* actions) {
   static TimerReason last_timer_reason;
   const TimerReason timer_reason = last_timer_reason;
-  if (actions->rotated_encoder && is_encoder_pressed()) {
-      if (actions->encoder_direction == Ccw) {
-          state->menu_open = Menu_Settings;
-          redraw_settings_screen(state);
-      } else {
-          state->menu_open = Menu_MorseTable;
-          redraw_morse_table_screen(state);
-      }
+  if (actions->pressed_encoder) {
     silence_tone();
+    open_selection_menu(state);
+    redraw_selection_menu(state);
     return;
-  }
-
-  if(actions->pressed_encoder && !is_timer_setup()) {
-      // Set up timer for half a second to remove last character
-      last_timer_reason = TimerReason_RemoveLastChar;
-      setup_timer(500);
-  }
-  if(actions->released_encoder && is_timer_setup() && timer_reason == TimerReason_RemoveLastChar) {
-      reset_timer();
   }
 
   if (actions->pressed_morse_button) {
@@ -88,13 +73,6 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
 
   if (actions->timer1_finished) {
       switch(timer_reason) {
-      case TimerReason_RemoveLastChar:
-          if(is_encoder_pressed() && state->current_msg_char > 0) {
-              state->current_msg_char--;
-              redraw_message_buffer(state);
-          }
-          break;
-
       case TimerReason_Dah: {
           state->morse_buffer |= 1 << state->current_morse_element;
           ssd1306_printChar(127-5*6 + (state->current_morse_element << 3), 0, '-', true);

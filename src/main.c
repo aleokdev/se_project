@@ -102,6 +102,9 @@ int main(void) {
         // Got woken up, turn on the display and disable LPM
         ssd1306_command(SSD1306_DISPLAYON);
         state.in_low_power_mode = false;
+        // Also ignore the actions sent to avoid doing things while the screen is off
+        io_actions = (IoActions){0};
+        continue;
     } else {
         LPM0;
     }
@@ -124,6 +127,10 @@ int main(void) {
 
     case Menu_MorseTable:
         process_morse_table_menu(&state, &actions_to_process);
+        break;
+
+    case Menu_SelectMenu:
+        process_selection_menu(&state, &actions_to_process);
         break;
     }
 

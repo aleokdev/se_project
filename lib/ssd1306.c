@@ -179,7 +179,7 @@ void ssd1306_clearPage(uint8_t page, bool value) {
   for (uint8_t i = SSD1306_LCDWIDTH; i > 0; i--) { i2c_write(SSD1306_I2C_ADDRESS, buffer, 2); }
 }
 
-void ssd1306_printText(uint8_t x, uint8_t y, char* ptString, bool inverted) {
+void ssd1306_printText(uint8_t x, uint8_t y, const char* ptString, bool inverted) {
   ssd1306_setPosition(x, y);
 
   while (*ptString != '\0') {
@@ -196,7 +196,7 @@ void ssd1306_printText(uint8_t x, uint8_t y, char* ptString, bool inverted) {
   }
 } // end ssd1306_printText
 
-void ssd1306_printTextBlock(uint8_t x, uint8_t y, char* ptString, bool inverted) {
+void ssd1306_printTextBlock(uint8_t x, uint8_t y, const char* ptString, bool inverted) {
   char word[12];
   uint8_t i;
   uint8_t endX = x;

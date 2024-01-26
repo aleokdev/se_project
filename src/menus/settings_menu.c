@@ -19,14 +19,12 @@ void redraw_settings_screen(const State* state) {
 }
 
 void process_settings_menu(State* state, const IoActions* actions) {
-  // Close the settings menu if the morse button is pressed, and deselect any
-  // option chosen
-  if (actions->pressed_morse_button) {
-    state->menu_open = Menu_MorseTx;
-    state->setting_is_selected = false;
-    redraw_morse_transmission_screen(state);
-    return;
-  }
+  // Close the settings menu if the rotary encoder button is pressed
+    if (actions->pressed_morse_button) {
+      open_selection_menu(state);
+      redraw_selection_menu(state);
+      return;
+    }
 
   if (actions->rotated_encoder) {
     if (!state->setting_is_selected) {

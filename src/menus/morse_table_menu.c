@@ -4,12 +4,10 @@
 #include "ssd1306.h"
 
 void process_morse_table_menu(State* state, const IoActions* actions) {
-  if (actions->pressed_morse_button) {
-      state->menu_open = Menu_MorseTx;
-      redraw_morse_transmission_screen(state);
-  }
-  silence_tone();
-  return;
+    if (actions->pressed_encoder) {
+      open_selection_menu(state);
+      redraw_selection_menu(state);
+    }
 }
 
 void redraw_morse_table_screen(const State* _state) {
