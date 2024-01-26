@@ -13,8 +13,8 @@ uint8_t lpm_counter = 0;
 uint8_t lpm_trigger = 11;
 
 void setup_clocks(void) {
-  // Setup MCLK & SMCLK to 16MHz using the DCO
-  BCSCTL2 = SELM_0 | DIVM_0 | DIVS_0;   // MCLK source: DCO, divide by 1, SMCLK source: DCO, divide by 1
+  // Setup MCLK to 16MHz & SMCLK to 2MHz using the DCO
+  BCSCTL2 = SELM_0 | DIVM_0 | DIVS_3;   // MCLK source: DCO, divide by 1, SMCLK source: DCO, divide by 8
   if (CALBC1_16MHZ != 0xFF) {
     DCOCTL = 0x00;        // Use lowest DCO and modulation settings, as indicated by the datasheet
     // Use flash info memory calibration data to setup DCO to 16MHz
@@ -72,7 +72,8 @@ void setup_io(void) {
   TA0CCTL0 = 0;
   TA0CCTL1 = OUTMOD_7;      // PWM reset/set
   TA0CCR0 = 0;              // Turn it off
-  TA0CTL = TASSEL_1 | MC_1; // ACLK (12kHz), do not divide, up to CCR0
+  TA0CTL = TASSEL_2 | ID_1 | MC_1; // SMCLK (2MHz), divide by 2, up to CCR0
+  _Static_assert(AUDIO_TIMER_FREQUENCY == 1000000ul, "AUDIO_TIMER_FREQUENCY does not match configuration in setup_io");
 
   // Use timer 1 for morse dit/dah classification & knowing when to start new
   // letter
@@ -180,19 +181,20 @@ void config_morse_output(MorseOutput output) {
 }
 
 void silence_tone(void) {
-    // Reset the tone timer
-    TA0CCR0 = 0;
-    // Avoid leaving the PWM output on to prevent noise (set the PWM pins to PxOUT, which are 0)
-    TA0CCTL1 = OUTMOD_0;
+  // Reset the tone timer
+  TA0CCR0 = 0;
+  // Avoid leaving the PWM output on to prevent noise (set the PWM pins to PxOUT, which are 0)
+  TA0CCTL1 = OUTMOD_0;
 }
 
 void play_tone(uint16_t tone_time) {
-    TA0CCR0 = tone_time;
-    TA0CCR1 = (tone_time >> 4) * settings.tone_volume;
-    // Re-enable the PWM output: Set pin when TAR==T0CCR1, reset when TAR==T0CCR0
-    TA0CCTL1 = OUTMOD_7;
+  // TA0CCR0 selects tone frequency while TA0CCR1 selects tone volume (duty cycle)
+  TA0CCR0 = tone_time;
+  TA0CCR1 = tone_time >> (8 - settings.tone_volume);
+  // Re-enable the PWM output: Set pin when TAR==T0CCR1, reset when TAR==T0CCR0
+  TA0CCTL1 = OUTMOD_7;
 }
 
 bool is_encoder_pressed(void) {
-    return !(P1IN & BIT4);
+  return !(P1IN & BIT4);
 }

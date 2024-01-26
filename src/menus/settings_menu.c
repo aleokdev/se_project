@@ -47,11 +47,16 @@ void redraw_volume(bool hovered, bool selected) {
   ssd1306_printText(0, 2, "  Volumen", hovered);
   ssd1306_printText(6 * 10, 2, "--------", selected);
   ssd1306_printChar(6 * 10 + settings.tone_volume * 6, 2, '*', selected);
+  if(selected) {
+    play_tone(settings.tone_value);
+  } else {
+    silence_tone();
+  }
 }
 
 void redraw_tone(bool hovered, bool selected) {
   ssd1306_printText(0, 3, "     Tono", hovered);
-  const uint16_t tone = 12000 / (settings.tone_value + 1);
+  const uint16_t tone = AUDIO_TIMER_FREQUENCY / (settings.tone_value + 1);
   char buffer[16];
   snprintf(buffer, 16, "%d Hz", tone);
   ssd1306_printText(6 * 10, 3, buffer, selected);
@@ -89,16 +94,18 @@ void changed_volume(ReDirection dir) {
           settings.tone_volume--;
       }
     }
+
+    play_tone(settings.tone_value);
 }
 
 void changed_tone(ReDirection dir) {
   if (dir == Ccw) {
-    if (settings.tone_value < 100) {
-        settings.tone_value++;
+    if (settings.tone_value < 2000) {
+        settings.tone_value+=10;
     }
   } else {
-    if (settings.tone_value > 15) {
-        settings.tone_value--;
+    if (settings.tone_value > 1000) {
+        settings.tone_value-=10;
     }
   }
 

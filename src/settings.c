@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include "io.h"
+
 #include "msp430.h"
 
 #define DEFAULT_SETTINGS (Settings) {                 \
@@ -7,8 +9,8 @@
     .tone_value = 19,                                 \
     /* Default tone volume: About half-way */         \
     .tone_volume = 3,                                 \
-    /* Default dah time: 200 / 1500 * 1000 = 130ms */ \
-    .dah_time = 199                                   \
+    /* Default dah time: Equivalent to 600Hz */       \
+    .dah_time = AUDIO_TIMER_FREQUENCY / 600u          \
 }
 
 Settings settings = DEFAULT_SETTINGS;

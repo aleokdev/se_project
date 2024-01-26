@@ -8,6 +8,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// SMCLK (2MHz) divided by 2: 1MHz
+#define AUDIO_TIMER_FREQUENCY (1000000ul)
+
 typedef struct {
   bool rotated_encoder : 1;
   ReDirection encoder_direction : 1;
