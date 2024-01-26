@@ -23,6 +23,7 @@ void process_settings_menu(State* state, const IoActions* actions) {
     if (actions->pressed_morse_button) {
       open_selection_menu(state);
       redraw_selection_menu(state);
+      silence_tone();
       return;
     }
 

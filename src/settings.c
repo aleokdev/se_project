@@ -47,6 +47,11 @@ void redraw_tone(bool hovered, bool selected) {
   char buffer[16];
   snprintf(buffer, 16, "%d Hz", tone);
   ssd1306_printText(6 * 10, 3, buffer, selected);
+  if(selected) {
+    output_tone(tone_value);
+  } else {
+    silence_tone();
+  }
 }
 
 void redraw_dah_time(bool hovered, bool selected) {
@@ -92,6 +97,8 @@ void changed_tone(ReDirection dir) {
         tone_value--;
     }
   }
+
+  output_tone(tone_value);
 }
 
 void changed_dah_time(ReDirection dir) {
