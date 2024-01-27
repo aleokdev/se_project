@@ -45,7 +45,9 @@ void redraw_output_sel(bool hovered, bool selected) {
 
 void redraw_volume(bool hovered, bool selected) {
   ssd1306_printText(0, 2, "  Volumen", hovered);
-  ssd1306_printText(6 * 10, 2, "--------", selected);
+  for(uint8_t i = 0; i <= SETTINGS_VOLUME_MAX * 6; i+=6) {
+    ssd1306_printChar(6 * 10 + i, 2, '-', selected);
+  }
   ssd1306_printChar(6 * 10 + settings.tone_volume * 6, 2, '*', selected);
   if(selected) {
     play_tone(settings.tone_value);
@@ -86,7 +88,7 @@ void changed_output_sel(ReDirection dir) {
 
 void changed_volume(ReDirection dir) {
     if (dir == Cw) {
-      if (settings.tone_volume < 7) {
+      if (settings.tone_volume < SETTINGS_VOLUME_MAX) {
           settings.tone_volume++;
       }
     } else {
@@ -145,6 +147,7 @@ void process_settings_menu(State* state, const IoActions* actions) {
       redraw_selection_menu(state);
       silence_tone();
       save_settings();
+      state->setting_is_selected = false;
       return;
     }
 

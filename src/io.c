@@ -170,12 +170,12 @@ __interrupt void p2v() {
 void config_morse_output(MorseOutput output) {
     switch(output) {
     case MorseOutput_Aux:
-        P2DIR &= BIT6;  // Disable buzzer output
+        P2DIR &= ~BIT6;  // Disable buzzer output
         P1DIR |= BIT2;  // Enable aux output
         break;
     case MorseOutput_Buzzer:
         P2DIR |= BIT6;  // Enable buzzer output
-        P1DIR &= BIT2;  // Disable aux output
+        P1DIR &= ~BIT2;  // Disable aux output
         break;
     }
 }
@@ -190,7 +190,7 @@ void silence_tone(void) {
 void play_tone(uint16_t tone_time) {
   // TA0CCR0 selects tone frequency while TA0CCR1 selects tone volume (duty cycle)
   TA0CCR0 = tone_time;
-  TA0CCR1 = tone_time >> (8 - settings.tone_volume);
+  TA0CCR1 = tone_time >> (SETTINGS_VOLUME_MAX + 1 - settings.tone_volume);
   // Re-enable the PWM output: Set pin when TAR==T0CCR1, reset when TAR==T0CCR0
   TA0CCTL1 = OUTMOD_7;
 }
