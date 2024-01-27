@@ -20,6 +20,15 @@ int main(void) {
 
   __bis_SR_register(GIE);
 
+  const uint32_t hz_to_time = 1000000;
+  play_tone(hz_to_time / 647); // E5 (647.27Hz)
+  _delay_cycles(1000000);
+  play_tone(hz_to_time / 864); // A5 (864Hz)
+  _delay_cycles(1000000);
+  play_tone(hz_to_time / 1027); // C6 (1027.47Hz)
+  _delay_cycles(1000000);
+  silence_tone();
+
   State state = {0};
 
   redraw_morse_transmission_screen(&state);
