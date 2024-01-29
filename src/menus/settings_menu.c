@@ -31,11 +31,10 @@ const SettingParams setting_params[SETTINGS_COUNT] = {
     {.redraw_fn = redraw_dah_time, .changed_fn = changed_dah_time}};
 
 void redraw_output_sel(bool hovered, bool selected) {
-    ssd1306_clearPage(1, false);
     ssd1306_printText(0, 1, "   Salida", hovered);
     switch(settings.output) {
     case MorseOutput_Buzzer:
-        ssd1306_printText(6 * 10, 1, "Buzzer", selected);
+        ssd1306_printText(6 * 10, 1, "Buzzer   ", selected);
         break;
     case MorseOutput_Aux:
         ssd1306_printText(6 * 10, 1, "3.5mm Aux", selected);
@@ -129,9 +128,11 @@ void changed_dah_time(ReDirection dir) {
 
 
 void redraw_settings_screen(const State* state) {
-  ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Preferencias", true);
+  for(uint8_t page = 7; page > 0; page--) {
+    ssd1306_clearPage(page, false);
+  }
 
   for (uint8_t i = SETTINGS_COUNT; i > 0; i--) {
     const bool is_setting_hovered = state->setting_hovered == (i - 1u);

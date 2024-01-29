@@ -46,10 +46,11 @@ void process_selection_menu(State* state, const IoActions* actions) {
 }
 
 void redraw_selection_menu(const State* state) {
-    ssd1306_clearDisplay();
-
     for(uint8_t menu = 0; menu < (uint8_t)Menu_REGULAR_MENU_COUNT; menu++) {
         draw_menu_tab((Menu)menu, state->setting_hovered == menu);
+    }
+    for(uint8_t page = Menu_REGULAR_MENU_COUNT; page < 8; page++) {
+      ssd1306_clearPage(page, false);
     }
 }
 
