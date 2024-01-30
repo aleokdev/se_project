@@ -29,12 +29,12 @@ const uint16_t morse_characters[26] = {
     (4 << 8) | 0b0011, // Z
 };
 
-char translate_morse(uint8_t morse_count, uint8_t morse) {
+char translate_morse(MorseCharacter ch) {
   for (uint8_t i = sizeof(morse_characters) / 2; i > 0; i--) {
     uint16_t data = morse_characters[i - 1u];
     uint8_t char_len = (data >> 8) & 0xFF;
     uint8_t char_morse = data & 0xFF;
-    if (morse_count == char_len && morse == char_morse) {
+    if (char_len == ch.length && char_morse == ch.morse) {
       return i - 1 + 'A';
     }
   }
@@ -42,14 +42,14 @@ char translate_morse(uint8_t morse_count, uint8_t morse) {
   return 0;
 }
 
-MorseTranslation get_morse_translation(char ch) {
+MorseCharacter get_morse_translation(char ch) {
   if(ch >= 'A' && ch <= 'Z') {
     const uint16_t data = morse_characters[ch - 'A'];
     const uint8_t char_len = (data >> 8) & 0xFF;
     const uint8_t char_morse = data & 0xFF;
 
-    return (MorseTranslation) { .length = char_len, .morse = char_morse };
+    return (MorseCharacter) { .length = char_len, .morse = char_morse };
   } else {
-    return (MorseTranslation) { 0 };
+    return (MorseCharacter) { 0 };
   }
 }

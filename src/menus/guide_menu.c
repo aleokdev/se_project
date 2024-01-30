@@ -2,6 +2,7 @@
 
 #include "ssd1306.h"
 #include "morse.h"
+#include "morse_input.h"
 
 #include <stdbool.h>
 
@@ -19,13 +20,11 @@ void redraw_guide_screen(const State* _state) {
 typedef struct {
   // The character that the user has to write in morse
   char current_char;
-  // The index of the next morse element to write
-  uint8_t current_morse_element;
-  // The morse written until now for this character
-  uint8_t morse_buffer;
 
   // Amount of errors accumulated until now trying to write the current character in morse
   uint8_t error_count;
+
+  MorseInputData input_data;
 
   // What the guide menu is doing right now
   enum {
@@ -35,11 +34,6 @@ typedef struct {
   } state;
 } GuideState;
 GuideState gstate;
-
-typedef enum {
-    TimerReason_Dah,
-    TimerReason_NextChar
-} TimerReason;
 
 void start_char_gen(void) {
   gstate.current_char = 'A';
@@ -57,8 +51,8 @@ void query_next_char(void) {
   }
 }
 
-void check_char_written(void) {
-  if(translate_morse(gstate.current_morse_element, gstate.morse_buffer) == gstate.current_char) {
+void check_char_written(MorseCharacter ch) {
+  if(translate_morse(ch) == gstate.current_char) {
     // The user wrote the correct morse translation for the character shown
     query_next_char();
   } else {
@@ -71,7 +65,7 @@ void check_char_written(void) {
       ssd1306_printChar(64, 7, gstate.current_char, false);
       ssd1306_printText(76, 7, "es", false);
 
-      MorseTranslation translation = get_morse_translation(gstate.current_char);
+      MorseCharacter translation = get_morse_translation(gstate.current_char);
       for(uint8_t m = 0; m < translation.length; m++) {
         ssd1306_printChar(76+6*3 + m * 6, 7, translation.morse & (1 << m) ? '-' : '.', false);
       }
@@ -80,14 +74,9 @@ void check_char_written(void) {
 
   // Clear morse display
   ssd1306_printText(127-5*6, 0, "     ", true);
-
-  gstate.current_morse_element = 0;
-  gstate.morse_buffer = 0;
 }
 
 void process_guide_menu(State* state, const IoActions* actions) {
-  static TimerReason last_timer_reason = TimerReason_Dah;
-  const TimerReason timer_reason = last_timer_reason;
   switch(gstate.state) {
   case GuideState_GenChar_ReadingAdc: {
     if(actions->adc10_conv_finished) {
@@ -112,43 +101,9 @@ void process_guide_menu(State* state, const IoActions* actions) {
       open_selection_menu(state);
     }
 
-    if (actions->pressed_morse_button) {
-        play_tone(settings.tone_value);
-        ssd1306_printChar(127-5*6 + (gstate.current_morse_element << 3), 0, '.', true);
-
-        // Set up timer for 'dah' detection
-        last_timer_reason = TimerReason_Dah;
-        setup_timer(settings.dah_time);
-    }
-    if (actions->released_morse_button && TA0CCR0) {
-        silence_tone();
-        reset_timer();
-        gstate.current_morse_element++;
-
-       if (gstate.current_morse_element >= 4) {
-           // No consonant or vowel is longer than 4 morse elements, so go to next character directly
-           check_char_written();
-       } else {
-         // Setup next character timer
-         last_timer_reason = TimerReason_NextChar;
-         setup_timer(settings.dah_time);
-       }
-    }
-
-    if (actions->timer1_finished) {
-        switch(timer_reason) {
-        case TimerReason_Dah: {
-            gstate.morse_buffer |= 1 << gstate.current_morse_element;
-            ssd1306_printChar(127-5*6 + (gstate.current_morse_element << 3), 0, '-', true);
-            break;
-        }
-
-        case TimerReason_NextChar:
-            if(gstate.current_morse_element > 0) {
-              check_char_written();
-            }
-            break;
-        }
+    const MorseCharacter char_input = process_morse_input(&gstate.input_data, actions);
+    if(char_input.length > 0) {
+      check_char_written(char_input);
     }
 
     break;
@@ -159,6 +114,7 @@ void process_guide_menu(State* state, const IoActions* actions) {
       gstate.state = GuideState_Guide;
       ssd1306_printText(64, 6, "          ", false);
       ssd1306_printText(64, 7, "          ", false);
+      gstate.input_data = (MorseInputData) { 0 };
       query_next_char();
     }
     break;
@@ -171,8 +127,6 @@ void open_guide_menu(State* state) {
 
   gstate = (GuideState) {
     .current_char = 'A',
-    .current_morse_element = 0,
-    .morse_buffer = 0,
     .error_count = 0,
     .state = GuideState_GenChar_ReadingAdc
   };
