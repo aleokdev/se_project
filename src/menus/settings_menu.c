@@ -145,7 +145,6 @@ void process_settings_menu(State* state, const IoActions* actions) {
   // Close the settings menu if the rotary encoder button is pressed
     if (actions->pressed_morse_button) {
       open_selection_menu(state);
-      redraw_selection_menu(state);
       silence_tone();
       save_settings();
       state->setting_is_selected = false;
@@ -180,4 +179,9 @@ void process_settings_menu(State* state, const IoActions* actions) {
     state->setting_is_selected = !state->setting_is_selected;
     setting_params[state->setting_hovered].redraw_fn(true, state->setting_is_selected);
   }
+}
+
+void open_settings_menu(State* state) {
+  state->menu_open = Menu_Settings;
+  redraw_settings_screen(state);
 }

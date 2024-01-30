@@ -17,6 +17,7 @@ typedef struct {
   bool pressed_encoder : 1;
   bool released_encoder : 1;
 
+  bool adc10_conv_finished : 1;
   bool pressed_morse_button : 1;
   bool released_morse_button : 1;
   bool timer1_finished : 1;
@@ -54,6 +55,11 @@ bool is_encoder_pressed(void);
 
 // Resets the time counter to enable LPM
 void lpm_reset_time(void);
-
 // Sets the amount of time needed to trigger LPM, given in number of 366ms periods
 void lpm_set_interval(uint8_t time);
+
+// Starts an ADC conversion on A0 (P1.0). Used for generating pseudorandom numbers.
+void start_adc_conv(void);
+// Finishes the previously started ADC conversion by turning off the ADC and returns the value read.
+// Call after ADC10IFG is set.
+uint16_t finish_adc_conv(void);

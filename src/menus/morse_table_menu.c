@@ -6,7 +6,6 @@
 void process_morse_table_menu(State* state, const IoActions* actions) {
     if (actions->pressed_encoder) {
       open_selection_menu(state);
-      redraw_selection_menu(state);
     }
 }
 
@@ -31,4 +30,9 @@ void redraw_morse_table_screen(const State* _state) {
             }
         }
     }
+}
+
+void open_morse_table_menu(State* state) {
+  state->menu_open = Menu_MorseTable;
+  redraw_morse_table_screen(state);
 }

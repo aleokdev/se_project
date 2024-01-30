@@ -36,7 +36,6 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
   if (actions->pressed_encoder) {
     silence_tone();
     open_selection_menu(state);
-    redraw_selection_menu(state);
     return;
   }
 
@@ -112,4 +111,9 @@ void skip_to_next_msg_char(State* state) {
     state->current_morse_element = 0;
     state->morse_buffer = 0;
     ssd1306_printText(127-5*6, 0, "     ", true);
+}
+
+void open_morse_tx_menu(State* state) {
+  state->menu_open = Menu_MorseTx;
+  redraw_morse_transmission_screen(state);
 }

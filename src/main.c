@@ -38,6 +38,8 @@ int main(void) {
     P2IE |= BIT1 | BIT2 | BIT5;
     P1IE |= BIT4;
 
+    // Start ADC conversion if required
+    ADC10CTL0 |= ADC10SC;
     // Sleep (either deeply if in LPM or on mode 0 otherwise) until an interruption is received
     if(state.in_low_power_mode) {
         ssd1306_command(SSD1306_DISPLAYOFF);
@@ -52,6 +54,7 @@ int main(void) {
     } else {
         LPM0;
     }
+    ADC10CTL0 &= ~ADC10SC;
     // Got waken up, reset the low power mode time to go asleep
     lpm_reset_time();
 
@@ -62,20 +65,24 @@ int main(void) {
     P1IE = 0;
     switch(state.menu_open) {
     case Menu_MorseTx:
-        process_morse_tx_menu(&state, &actions_to_process);
-        break;
+      process_morse_tx_menu(&state, &actions_to_process);
+      break;
 
     case Menu_Settings:
-        process_settings_menu(&state, &actions_to_process);
-        break;
+      process_settings_menu(&state, &actions_to_process);
+      break;
 
     case Menu_MorseTable:
-        process_morse_table_menu(&state, &actions_to_process);
-        break;
+      process_morse_table_menu(&state, &actions_to_process);
+      break;
 
     case Menu_SelectMenu:
-        process_selection_menu(&state, &actions_to_process);
-        break;
+      process_selection_menu(&state, &actions_to_process);
+      break;
+
+    case Menu_Guide:
+      process_guide_menu(&state, &actions_to_process);
+      break;
     }
 
     if(io_actions.low_power_mode_requested) {

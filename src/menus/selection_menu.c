@@ -9,7 +9,8 @@ void draw_menu_tab(Menu menu, bool is_hovered) {
     const char* menu_names[Menu_REGULAR_MENU_COUNT] = {
                                  "Transmisor",
                                  "Tabla de Morse",
-                                 "Preferencias"
+                                 "Preferencias",
+                                 "Modo guia"
     };
 
     ssd1306_clearPage((uint8_t)menu, is_hovered);
@@ -34,14 +35,15 @@ void process_selection_menu(State* state, const IoActions* actions) {
     }
 
     if (actions->pressed_encoder) {
-      state->menu_open = (Menu)state->setting_hovered;
-      void(*redraw_functions[Menu_REGULAR_MENU_COUNT]) (const State*) = {
-                                                                redraw_morse_transmission_screen,
-                                                                redraw_morse_table_screen,
-                                                                redraw_settings_screen
+      void(*open_functions[Menu_REGULAR_MENU_COUNT]) (State*) = {
+                                                                open_morse_tx_menu,
+                                                                open_morse_table_menu,
+                                                                open_settings_menu,
+                                                                open_guide_menu
       };
+      const uint8_t menu_to_open = state->setting_hovered;
       state->setting_hovered = 0;
-      redraw_functions[(uint8_t)state->menu_open](state);
+      open_functions[menu_to_open](state);
     }
 }
 
@@ -58,4 +60,5 @@ void open_selection_menu(State* state) {
     last_menu = state->menu_open;
     state->setting_hovered = (uint8_t)last_menu;
     state->menu_open = Menu_SelectMenu;
+    redraw_selection_menu(state);
 }

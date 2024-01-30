@@ -38,6 +38,13 @@ void setup_clocks(void) {
 // Rotary encoder "DT"  | P2.1      P2.4 |
 // Rotary encoder "CLK" | P2.2      P2.3 |
 void setup_io(void) {
+  // ADC
+  ADC10CTL0 = SREF_0 | ADC10SHT_3 | ADC10SR // Ref +: VCC, -: VSS; S&H time = 64*ADC10CLKs, low samplerate mode
+            | ADC10IE;                      // enable interrupts
+  ADC10CTL1 = INCH_0 | SHS_0                // Sample A0 (P1.0), S&H source = ADC10SC, straight binary format
+            | ADC10SSEL_0 | CONSEQ_0 | ADC10DIV_0; // clk = MCLK / 1, single-channel single-conversion
+  ADC10AE0 = 1; // Enable A0 input
+
   // Rotary encoder inputs
   P1DIR &= ~BIT4;
   P1REN |= BIT4;
@@ -93,6 +100,12 @@ void setup_io(void) {
   ssd1306_init();
 }
 
+#pragma vector = ADC10_VECTOR
+__interrupt void int_adc10(void) {
+  io_actions.adc10_conv_finished = true;
+  LPM4_EXIT;
+}
+
 #pragma vector = WDT_VECTOR
 __interrupt void int_wdt(void) {
     if(++lpm_counter > lpm_trigger) {
@@ -112,7 +125,7 @@ void lpm_set_interval(uint8_t time) {
 }
 
 #pragma vector = TIMER1_A0_VECTOR
-__interrupt void int_T1_0(void) {
+__interrupt void int_T1_0() {
   io_actions.timer1_finished = true;
   TA1CCR0 = 0;
   LPM4_EXIT;
@@ -197,4 +210,14 @@ void play_tone(uint16_t tone_time) {
 
 bool is_encoder_pressed(void) {
   return !(P1IN & BIT4);
+}
+
+void start_adc_conv(void) {
+  ADC10CTL0 |= ADC10ON;       // Turn on ADC
+  ADC10CTL0 |= ENC;           // Enable conversion
+}
+
+uint16_t finish_adc_conv(void) {
+  ADC10CTL0 &= ~(ADC10ON | ENC | ADC10SC); // Turn off ADC
+  return ADC10MEM;
 }
