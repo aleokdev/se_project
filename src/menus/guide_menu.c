@@ -6,17 +6,6 @@
 
 #include <stdbool.h>
 
-void redraw_guide_screen(const State* _state) {
-  ssd1306_clearDisplay();
-  ssd1306_clearPage(0, true);
-  ssd1306_printText(2, 0, "Modo guia", true);
-  // Error display
-  ssd1306_printText(2, 6, "Intentos", false);
-  for(uint8_t i = 0; i < 3; i++) {
-    ssd1306_printChar(2 + i << 3, 7, 'o', false);
-  }
-}
-
 typedef struct {
   // The character that the user has to write in morse
   char current_char;
@@ -26,6 +15,12 @@ typedef struct {
 
   MorseInputData input_data;
 
+  // Stats
+  // Number of successful translations since the menu was opened
+  uint16_t correct_translations;
+  // Number of unsuccessful translations since the menu was opened
+  uint16_t incorrect_translations;
+
   // What the guide menu is doing right now
   enum {
     GuideState_GenChar_ReadingAdc,
@@ -34,6 +29,28 @@ typedef struct {
   } state;
 } GuideState;
 GuideState gstate;
+
+#define ERROR_DISPLAY_X (2+12)
+#define ERROR_DISPLAY_Y 7
+
+inline void reset_error_display(void) {
+  for(uint8_t i = 0; i < 3; i++) {
+    ssd1306_printChar(ERROR_DISPLAY_X + (i << 3), ERROR_DISPLAY_Y, 'o', false);
+  }
+}
+
+void redraw_guide_screen(const State* _state) {
+  ssd1306_clearDisplay();
+  ssd1306_clearPage(0, true);
+  ssd1306_printText(2, 0, "Modo guia", true);
+  // Error display
+  ssd1306_printText(2, 6, "Intentos", false);
+  reset_error_display();
+  ssd1306_printText(48+6, 2, "Aciertos", false);
+  ssd1306_printUI32(100+6, 2, gstate.correct_translations, false, false);
+  ssd1306_printText(48+6, 3, "Falladas", false);
+  ssd1306_printUI32(100+6, 3, gstate.incorrect_translations, false, false);
+}
 
 void start_char_gen(void) {
   gstate.current_char = 'A';
@@ -45,21 +62,23 @@ void start_char_gen(void) {
 void query_next_char(void) {
   start_char_gen();
   gstate.error_count = 0;
-  // Reset error display
-  for(uint8_t i = 0; i < 3; i++) {
-    ssd1306_printChar(2 + i << 3, 7, 'o', false);
-  }
+  reset_error_display();
 }
 
 void check_char_written(MorseCharacter ch) {
   if(translate_morse(ch) == gstate.current_char) {
     // The user wrote the correct morse translation for the character shown
+    gstate.correct_translations++;
+    ssd1306_printUI32(100+6, 2, gstate.correct_translations, false, false);
     query_next_char();
   } else {
     // The user wrote an incorrect morse translation for the character shown
-    ssd1306_printChar(2 + gstate.error_count << 3, 7, 'x', false);
+    ssd1306_printChar(ERROR_DISPLAY_X + (gstate.error_count << 3), ERROR_DISPLAY_Y, 'x', false);
     if (++gstate.error_count >= 3) {
       // ...and also had too many errors
+      gstate.incorrect_translations++;
+      ssd1306_printUI32(100+6, 3, gstate.incorrect_translations, false, false);
+
       gstate.state = GuideState_ShowingCorrectTranslation;
       ssd1306_printText(64, 6, "Incorrecto", false);
       ssd1306_printChar(64, 7, gstate.current_char, false);
@@ -85,7 +104,7 @@ void process_guide_menu(State* state, const IoActions* actions) {
       const uint8_t rand_table[] = {13, 6, 3, 2, 1}; // Not perfectly weighted, but it'll do
       gstate.current_char += (finish_adc_conv() & 1) ? rand_table[conversion_idx] : 0;
       if(++conversion_idx >= 5) {
-        ssd1306_printChar2x(128/2-5, 2, gstate.current_char, false);
+        ssd1306_printChar2x(20, 2, gstate.current_char, false);
         gstate.state = GuideState_Guide;
         conversion_idx = 0;
       } else {
