@@ -175,8 +175,11 @@ void ssd1306_clearPage(uint8_t page, bool value) {
   ssd1306_setDrawingRect(0, page, SSD1306_LCDWIDTH - 1, page);
 
   buffer[0] = 0x40;                // Upload data
-  buffer[1] = value ? 0xFF : 0x00; // Empty column
-  for (uint8_t i = SSD1306_LCDWIDTH; i > 0; i--) { i2c_write(SSD1306_I2C_ADDRESS, buffer, 2); }
+  const uint8_t fill = value ? 0xFF : 0x00;
+  for (uint8_t i = 16; i > 0; i--) {
+    buffer[i] = fill; // Empty column
+  }
+  for (uint8_t i = SSD1306_LCDWIDTH / 16; i > 0; i--) { i2c_write(SSD1306_I2C_ADDRESS, buffer, 17); }
 }
 
 void ssd1306_printText(uint8_t x, uint8_t y, const char* ptString, bool inverted) {
