@@ -38,7 +38,7 @@ void skip_to_next_msg_char(void) {
   } else {
       tx_state.current_msg_char++;
   }
-  ssd1306_printText(127-5*6, 0, "     ", true);
+  clear_morse_display();
 }
 
 void redraw_morse_transmission_screen(const State* _state) {
@@ -56,26 +56,28 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
   }
 
   const MorseCharacter input_char = process_morse_input(&tx_state.input_data, actions);
-  MorseCharacter char_to_draw;
 
   if(input_char.length > 0) {
-    char_to_draw = input_char;
-  } else {
-    // Draw character being currently input
-    char_to_draw = (MorseCharacter) { .length = tx_state.input_data.current_morse_element, .morse = tx_state.input_data.morse_buffer };
-  }
-
-  char translated_char = translate_morse(char_to_draw);
-  if (translated_char) {
+    char translated_char = translate_morse(input_char);
+    if (translated_char) {
+      tx_state.msg_buffer[tx_state.current_msg_char] = translated_char;
+    } else {
+      tx_state.msg_buffer[tx_state.current_msg_char] = '?';
+    }
     ssd1306_printChar2x((tx_state.current_msg_char << 3) + (tx_state.current_msg_char << 2), 2,
-                        translated_char, false);
-    tx_state.msg_buffer[tx_state.current_msg_char] = translated_char;
-  } else {
-    tx_state.msg_buffer[tx_state.current_msg_char] = '?';
-  }
+        tx_state.msg_buffer[tx_state.current_msg_char], false);
 
-  if(input_char.length > 0) {
-    skip_to_next_msg_char();
+    if(input_char.length == morse_backspace.length && input_char.morse == morse_backspace.morse) {
+      // Backspace: Delete last character shown as well as the current one
+      ssd1306_printChar2x((tx_state.current_msg_char << 3) + (tx_state.current_msg_char << 2), 2, ' ', false);
+      if(tx_state.current_msg_char > 0) {
+        tx_state.current_msg_char--;
+        ssd1306_printChar2x((tx_state.current_msg_char << 3) + (tx_state.current_msg_char << 2), 2, ' ', false);
+      }
+      clear_morse_display();
+    } else {
+      skip_to_next_msg_char();
+    }
   }
 }
 

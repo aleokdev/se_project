@@ -21,3 +21,5 @@ typedef struct {
 // Processes actions given as morse input. Does everything from playing tones to drawing the input on the screen.
 // Returns a valid MorseCharacter (not zero) when a character finishes being input
 MorseCharacter process_morse_input(MorseInputData* data, const IoActions* actions);
+
+void clear_morse_display(void);

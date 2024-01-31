@@ -91,8 +91,7 @@ void check_char_written(MorseCharacter ch) {
     }
   }
 
-  // Clear morse display
-  ssd1306_printText(127-5*6, 0, "     ", true);
+  clear_morse_display();
 }
 
 void process_guide_menu(State* state, const IoActions* actions) {

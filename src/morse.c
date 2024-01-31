@@ -1,6 +1,6 @@
 #include "morse.h"
 
-const uint16_t morse_characters[26] = {
+const uint16_t morse_characters[] = {
     (2 << 8) | 0b10,   // A
     (4 << 8) | 0b0001, // B
     (4 << 8) | 0b0101, // C
@@ -26,10 +26,14 @@ const uint16_t morse_characters[26] = {
     (3 << 8) | 0b110,  // W
     (4 << 8) | 0b1001, // X
     (4 << 8) | 0b1101, // Y
-    (4 << 8) | 0b0011, // Z
+    (4 << 8) | 0b0011  // Z
 };
 
 char translate_morse(MorseCharacter ch) {
+  if(ch.length == 8 && !ch.morse) {
+    // ........ | Backspace. Return something graphically similar
+    return '<';
+  }
   for (uint8_t i = sizeof(morse_characters) / 2; i > 0; i--) {
     uint16_t data = morse_characters[i - 1u];
     uint8_t char_len = (data >> 8) & 0xFF;
