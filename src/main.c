@@ -29,7 +29,7 @@ int main(void) {
   _delay_cycles(1000000);
   silence_tone();
 
-  State state = {0};
+  State state = {};
 
   redraw_morse_transmission_screen(&state);
   ssd1306_command(SSD1306_DISPLAYON); // Turn on the display when everything's in order
