@@ -32,6 +32,7 @@ int main(void) {
   State state = {0};
 
   redraw_morse_transmission_screen(&state);
+  ssd1306_command(SSD1306_DISPLAYON); // Turn on the display when everything's in order
 
   for (;;) {
     // Re-enable button interrupts

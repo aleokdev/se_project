@@ -61,8 +61,6 @@ void ssd1306_init(void) {
   ssd1306_command(SSD1306_NORMALDISPLAY);       // 0xA6
 
   ssd1306_command(SSD1306_DEACTIVATE_SCROLL);
-
-  ssd1306_command(SSD1306_DISPLAYON); //--turn on oled panel
 } // end ssd1306_init
 
 void ssd1306_command(unsigned char command) {
@@ -240,11 +238,12 @@ void ssd1306_printUI32(uint8_t x, uint8_t y, uint32_t val, bool inverted) {
 } // end ssd1306_printUI32
 
 void ultoa(uint32_t val, char* string) {
+  char* ptr = string;
   do {
-    *(string++) = val % 10 + '0'; // Add the ith digit to the number string
+    *(ptr++) = val % 10 + '0'; // Add the ith digit to the number string
   } while ((val /= 10) > 0);
 
-  *(string++) = '\0'; // Add termination to string
+  *ptr = '\0'; // Add termination to string
   reverse(string);    // string was built in reverse, fix that
 } // end ultoa
 
