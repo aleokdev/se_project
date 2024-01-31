@@ -1,18 +1,9 @@
-/*
- * ssd1306.h
- */
+// Original version found at https://github.com/sdp8483/MSP430G2_SSD1306_OLED
 
-#ifndef SSD1306_H_
-#define SSD1306_H_
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
-
-/* ====================================================================
- * Horizontal Centering Number Array
- * ==================================================================== */
-#define HCENTERUL_OFF 0
-#define HCENTERUL_ON 1
 
 /* ====================================================================
  * SSD1306 OLED Settings and Command Definitions
@@ -61,7 +52,6 @@
 #define SSD1306_EXTERNALVCC 0x1
 #define SSD1306_SWITCHCAPVCC 0x2
 
-// currently no scroll functionality, left for possible future use
 #define SSD1306_ACTIVATE_SCROLL 0x2F
 #define SSD1306_DEACTIVATE_SCROLL 0x2E
 #define SSD1306_SET_VERTICAL_SCROLL_AREA 0xA3
@@ -97,10 +87,7 @@ void ssd1306_printChar(uint8_t, uint8_t, char, bool inverted);
 void ssd1306_printChar2x(uint8_t, uint8_t, char, bool inverted);
 void ssd1306_printText(uint8_t, uint8_t, const char*, bool inverted);
 void ssd1306_printTextBlock(uint8_t, uint8_t, const char*, bool inverted);
-void ssd1306_printUI32(uint8_t, uint8_t, uint32_t, uint8_t, bool inverted);
+void ssd1306_printUI32(uint8_t, uint8_t, uint32_t, bool inverted);
 
-uint8_t digits(uint32_t);
 void ultoa(uint32_t, char*);
 void reverse(char*);
-
-#endif /* SSD1306_H_ */

@@ -1,7 +1,3 @@
-/*
- * i2c.c
- */
-
 #include "i2c.h"
 
 #include <msp430.h>
