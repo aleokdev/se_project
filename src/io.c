@@ -14,9 +14,10 @@ uint8_t lpm_trigger = 11;
 
 void setup_clocks(void) {
   // Setup MCLK to 16MHz & SMCLK to 2MHz using the DCO
-  BCSCTL2 = SELM_0 | DIVM_0 | DIVS_3;   // MCLK source: DCO, divide by 1, SMCLK source: DCO, divide by 8
+  BCSCTL2 =
+      SELM_0 | DIVM_0 | DIVS_3; // MCLK source: DCO, divide by 1, SMCLK source: DCO, divide by 8
   if (CALBC1_16MHZ != 0xFF) {
-    DCOCTL = 0x00;        // Use lowest DCO and modulation settings, as indicated by the datasheet
+    DCOCTL = 0x00; // Use lowest DCO and modulation settings, as indicated by the datasheet
     // Use flash info memory calibration data to setup DCO to 16MHz
     BCSCTL1 = CALBC1_16MHZ;
     DCOCTL = CALDCO_16MHZ;
@@ -39,11 +40,13 @@ void setup_clocks(void) {
 // Rotary encoder "CLK" | P2.2      P2.3 |
 void setup_io(void) {
   // ADC
-  ADC10CTL0 = SREF_0 | ADC10SHT_3 | ADC10SR // Ref +: VCC, -: VSS; S&H time = 64*ADC10CLKs, low samplerate mode
-            | ADC10IE;                      // enable interrupts
-  ADC10CTL1 = INCH_0 | SHS_0                // Sample A0 (P1.0), S&H source = ADC10SC, straight binary format
-            | ADC10SSEL_0 | CONSEQ_0 | ADC10DIV_0; // clk = MCLK / 1, single-channel single-conversion
-  ADC10AE0 = 1; // Enable A0 input
+  ADC10CTL0 = SREF_0 | ADC10SHT_3 |
+              ADC10SR        // Ref +: VCC, -: VSS; S&H time = 64*ADC10CLKs, low samplerate mode
+              | ADC10IE;     // enable interrupts
+  ADC10CTL1 = INCH_0 | SHS_0 // Sample A0 (P1.0), S&H source = ADC10SC, straight binary format
+              | ADC10SSEL_0 | CONSEQ_0 |
+              ADC10DIV_0; // clk = MCLK / 1, single-channel single-conversion
+  ADC10AE0 = 1;           // Enable A0 input
 
   // Rotary encoder inputs
   P1DIR &= ~BIT4;
@@ -77,10 +80,11 @@ void setup_io(void) {
 
   P1OUT &= ~BIT2;
   TA0CCTL0 = 0;
-  TA0CCTL1 = OUTMOD_7;      // PWM reset/set
-  TA0CCR0 = 0;              // Turn it off
+  TA0CCTL1 = OUTMOD_7;             // PWM reset/set
+  TA0CCR0 = 0;                     // Turn it off
   TA0CTL = TASSEL_2 | ID_1 | MC_1; // SMCLK (2MHz), divide by 2, up to CCR0
-  _Static_assert(AUDIO_TIMER_FREQUENCY == 1000000ul, "AUDIO_TIMER_FREQUENCY does not match configuration in setup_io");
+  _Static_assert(AUDIO_TIMER_FREQUENCY == 1000000ul,
+                 "AUDIO_TIMER_FREQUENCY does not match configuration in setup_io");
 
   // Use timer 1 for morse dit/dah classification & knowing when to start new
   // letter
@@ -89,9 +93,9 @@ void setup_io(void) {
   TA1CCTL0 = CCIE;                 // Interrupt when timer reaches value at CCR0
 
   // Use watchdog timer to enter low-power mode after 1min
-  WDTCTL = WDTPW | WDTTMSEL | WDTHOLD | WDTCNTCL ; // Interval mode, halt timer, clear counter
-  WDTCTL = WDTPW | WDTTMSEL | WDTSSEL ; // Interval mode, ACLK (12kHz) / 32768
-  IE1 |= WDTIE;                         // Enable interrupts
+  WDTCTL = WDTPW | WDTTMSEL | WDTHOLD | WDTCNTCL; // Interval mode, halt timer, clear counter
+  WDTCTL = WDTPW | WDTTMSEL | WDTSSEL;            // Interval mode, ACLK (12kHz) / 32768
+  IE1 |= WDTIE;                                   // Enable interrupts
 
   // Initialize I2C to use with OLED display (Pins 1.6, 1.7)
   i2c_init();
@@ -108,21 +112,20 @@ __interrupt void int_adc10(void) {
 
 #pragma vector = WDT_VECTOR
 __interrupt void int_wdt(void) {
-    if(++lpm_counter > lpm_trigger) {
-        io_actions.low_power_mode_requested = true;
-        LPM4_EXIT;
-    }
+  if (++lpm_counter > lpm_trigger) {
+    io_actions.low_power_mode_requested = true;
+    LPM4_EXIT;
+  }
 }
 
 void lpm_reset_time(void) {
-    lpm_counter = 0;
-    WDTCTL = WDTPW | WDTTMSEL | WDTSSEL | WDTCNTCL ; // Interval mode, ACLK (12kHz) / 32768, clear counter
-    WDTCTL = WDTPW | WDTTMSEL | WDTSSEL ; // Interval mode, ACLK (12kHz) / 32768
+  lpm_counter = 0;
+  WDTCTL =
+      WDTPW | WDTTMSEL | WDTSSEL | WDTCNTCL; // Interval mode, ACLK (12kHz) / 32768, clear counter
+  WDTCTL = WDTPW | WDTTMSEL | WDTSSEL;       // Interval mode, ACLK (12kHz) / 32768
 }
 
-void lpm_set_interval(uint8_t time) {
-    lpm_trigger = time;
-}
+void lpm_set_interval(uint8_t time) { lpm_trigger = time; }
 
 #pragma vector = TIMER1_A0_VECTOR
 __interrupt void int_T1_0() {
@@ -133,28 +136,28 @@ __interrupt void int_T1_0() {
 
 #pragma vector = PORT1_VECTOR
 __interrupt void p1v() {
-    static bool is_encoder_pressed = false;
-    // Change interrupt edge select to call interrupt when the button is
-    // released/pressed next time
-    is_encoder_pressed = !is_encoder_pressed;
-    io_actions.pressed_encoder = is_encoder_pressed;
-    io_actions.released_encoder = !is_encoder_pressed;
-    P1IES ^= BIT4;
+  static bool is_encoder_pressed = false;
+  // Change interrupt edge select to call interrupt when the button is
+  // released/pressed next time
+  is_encoder_pressed = !is_encoder_pressed;
+  io_actions.pressed_encoder = is_encoder_pressed;
+  io_actions.released_encoder = !is_encoder_pressed;
+  P1IES ^= BIT4;
 
-    P1IFG = 0;
-    LPM4_EXIT;
+  P1IFG = 0;
+  LPM4_EXIT;
 }
 
 #pragma vector = PORT2_VECTOR
 __interrupt void p2v() {
   if (P2IFG & BIT5) {
-      static bool is_morse_button_pressed = false;
-      // Change interrupt edge select to call interrupt when the button is
-      // released/pressed next time
-      is_morse_button_pressed = !is_morse_button_pressed;
-      io_actions.pressed_morse_button = is_morse_button_pressed;
-      io_actions.released_morse_button = !is_morse_button_pressed;
-      P2IES ^= BIT5;
+    static bool is_morse_button_pressed = false;
+    // Change interrupt edge select to call interrupt when the button is
+    // released/pressed next time
+    is_morse_button_pressed = !is_morse_button_pressed;
+    io_actions.pressed_morse_button = is_morse_button_pressed;
+    io_actions.released_morse_button = !is_morse_button_pressed;
+    P2IES ^= BIT5;
   } else {
     // Bit 1 detects rising edges, bit 2 detects falling edges
     if (P2IFG & BIT1) {
@@ -181,16 +184,16 @@ __interrupt void p2v() {
 }
 
 void config_morse_output(MorseOutput output) {
-    switch(output) {
+  switch (output) {
     case MorseOutput_Aux:
-        P2DIR &= ~BIT6;  // Disable buzzer output
-        P1DIR |= BIT2;  // Enable aux output
-        break;
+      P2DIR &= ~BIT6; // Disable buzzer output
+      P1DIR |= BIT2;  // Enable aux output
+      break;
     case MorseOutput_Buzzer:
-        P2DIR |= BIT6;  // Enable buzzer output
-        P1DIR &= ~BIT2;  // Disable aux output
-        break;
-    }
+      P2DIR |= BIT6;  // Enable buzzer output
+      P1DIR &= ~BIT2; // Disable aux output
+      break;
+  }
 }
 
 void silence_tone(void) {
@@ -209,8 +212,8 @@ void play_tone(uint16_t tone_time) {
 }
 
 void start_adc_conv(void) {
-  ADC10CTL0 |= ADC10ON;       // Turn on ADC
-  ADC10CTL0 |= ENC;           // Enable conversion
+  ADC10CTL0 |= ADC10ON; // Turn on ADC
+  ADC10CTL0 |= ENC;     // Enable conversion
 }
 
 uint16_t finish_adc_conv(void) {
@@ -219,12 +222,12 @@ uint16_t finish_adc_conv(void) {
 }
 
 void reset_timer(void) {
-    TA1CCR0 = 0;
-    TA1CTL |= TACLR;
+  TA1CCR0 = 0;
+  TA1CTL |= TACLR;
 }
 
 void setup_timer(uint16_t time) {
-    reset_timer();
-    TA1CCR0 = time;
-    TA1CTL &= ~TACLR;
+  reset_timer();
+  TA1CCR0 = time;
+  TA1CTL &= ~TACLR;
 }

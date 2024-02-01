@@ -30,24 +30,20 @@ const SettingParams setting_params[SETTINGS_COUNT] = {
     {.redraw_fn = redraw_dah_time, .changed_fn = changed_dah_time}};
 
 void redraw_output_sel(bool hovered, bool selected) {
-    ssd1306_printText(0, 1, "   Salida", hovered);
-    switch(settings.output) {
-    case MorseOutput_Buzzer:
-        ssd1306_printText(6 * 10, 1, "Buzzer   ", selected);
-        break;
-    case MorseOutput_Aux:
-        ssd1306_printText(6 * 10, 1, "3.5mm Aux", selected);
-        break;
-    }
+  ssd1306_printText(0, 1, "   Salida", hovered);
+  switch (settings.output) {
+    case MorseOutput_Buzzer: ssd1306_printText(6 * 10, 1, "Buzzer   ", selected); break;
+    case MorseOutput_Aux: ssd1306_printText(6 * 10, 1, "3.5mm Aux", selected); break;
+  }
 }
 
 void redraw_volume(bool hovered, bool selected) {
   ssd1306_printText(0, 2, "  Volumen", hovered);
-  for(uint8_t i = 0; i <= SETTINGS_VOLUME_MAX * 6; i+=6) {
+  for (uint8_t i = 0; i <= SETTINGS_VOLUME_MAX * 6; i += 6) {
     ssd1306_printChar(6 * 10 + i, 2, '-', selected);
   }
   ssd1306_printChar(6 * 10 + settings.tone_volume * 6, 2, '*', selected);
-  if(selected) {
+  if (selected) {
     play_tone(settings.tone_value);
   } else {
     silence_tone();
@@ -60,7 +56,7 @@ void redraw_tone(bool hovered, bool selected) {
   char buffer[16];
   snprintf(buffer, 16, "%d Hz", tone);
   ssd1306_printText(6 * 10, 3, buffer, selected);
-  if(selected) {
+  if (selected) {
     play_tone(settings.tone_value);
   } else {
     silence_tone();
@@ -76,36 +72,36 @@ void redraw_dah_time(bool hovered, bool selected) {
 }
 
 void changed_output_sel(ReDirection dir) {
-    if (dir == Cw) {
-        settings.output = MorseOutput_Buzzer;
-    } else {
-        settings.output = MorseOutput_Aux;
-    }
-    config_morse_output(settings.output);
+  if (dir == Cw) {
+    settings.output = MorseOutput_Buzzer;
+  } else {
+    settings.output = MorseOutput_Aux;
+  }
+  config_morse_output(settings.output);
 }
 
 void changed_volume(ReDirection dir) {
-    if (dir == Cw) {
-      if (settings.tone_volume < SETTINGS_VOLUME_MAX) {
-          settings.tone_volume++;
-      }
-    } else {
-      if (settings.tone_volume > 0) {
-          settings.tone_volume--;
-      }
+  if (dir == Cw) {
+    if (settings.tone_volume < SETTINGS_VOLUME_MAX) {
+      settings.tone_volume++;
     }
+  } else {
+    if (settings.tone_volume > 0) {
+      settings.tone_volume--;
+    }
+  }
 
-    play_tone(settings.tone_value);
+  play_tone(settings.tone_value);
 }
 
 void changed_tone(ReDirection dir) {
   if (dir == Ccw) {
     if (settings.tone_value < 2000) {
-        settings.tone_value+=10;
+      settings.tone_value += 10;
     }
   } else {
     if (settings.tone_value > 1000) {
-        settings.tone_value-=10;
+      settings.tone_value -= 10;
     }
   }
 
@@ -113,15 +109,15 @@ void changed_tone(ReDirection dir) {
 }
 
 void changed_dah_time(ReDirection dir) {
-    if (dir == Cw) {
-      if (settings.dah_time < 1000) {
-          settings.dah_time++;
-      }
-    } else {
-      if (settings.dah_time > 1) {
-          settings.dah_time--;
-      }
+  if (dir == Cw) {
+    if (settings.dah_time < 1000) {
+      settings.dah_time++;
     }
+  } else {
+    if (settings.dah_time > 1) {
+      settings.dah_time--;
+    }
+  }
 }
 
 typedef struct {
@@ -134,9 +130,7 @@ SettingsState sstate;
 void redraw_settings_menu(void) {
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Preferencias", true);
-  for(uint8_t page = 7; page > 0; page--) {
-    ssd1306_clearPage(page, false);
-  }
+  for (uint8_t page = 7; page > 0; page--) { ssd1306_clearPage(page, false); }
 
   for (uint8_t i = SETTINGS_COUNT; i > 0; i--) {
     const bool is_setting_hovered = sstate.setting_hovered == (i - 1u);
@@ -147,12 +141,12 @@ void redraw_settings_menu(void) {
 
 void process_settings_menu(Menu* menu_open, const IoActions* actions) {
   // Close the settings menu if the rotary encoder button is pressed
-    if (actions->pressed_morse_button) {
-      silence_tone();
-      save_settings();
-      open_selection_menu(menu_open);
-      return;
-    }
+  if (actions->pressed_morse_button) {
+    silence_tone();
+    save_settings();
+    open_selection_menu(menu_open);
+    return;
+  }
 
   if (actions->rotated_encoder) {
     if (!sstate.setting_is_selected) {
@@ -186,6 +180,6 @@ void process_settings_menu(Menu* menu_open, const IoActions* actions) {
 
 void open_settings_menu(Menu* menu_open) {
   *menu_open = Menu_Settings;
-  sstate = (SettingsState) {};
+  sstate = (SettingsState){};
   redraw_settings_menu();
 }

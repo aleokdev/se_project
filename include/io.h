@@ -43,17 +43,14 @@ void setup_clocks(void);
 void setup_io(void);
 
 // == Timer1 functions ==
-// Starts timer1 in one-shot mode. It will interrupt and turn on `timer1_finished` after the time is over.
-// Time is given as a value in 1/1500ths of a second.
+// Starts timer1 in one-shot mode. It will interrupt and turn on `timer1_finished` after the time is
+// over. Time is given as a value in 1/1500ths of a second.
 void setup_timer(uint16_t time);
 // Resets timer1 and stops any ongoing countdown.
 void reset_timer(void);
 
 // == Audio declarations ==
-typedef enum {
-    MorseOutput_Buzzer,
-    MorseOutput_Aux
-} MorseOutput;
+typedef enum { MorseOutput_Buzzer, MorseOutput_Aux } MorseOutput;
 
 // Change the tone output used for the one given, disabling the other one.
 void config_morse_output(MorseOutput);

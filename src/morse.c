@@ -30,7 +30,7 @@ const uint16_t morse_characters[] = {
 };
 
 char translate_morse(MorseCharacter ch) {
-  if(ch.length == 8 && !ch.morse) {
+  if (ch.length == 8 && !ch.morse) {
     // ........ | Backspace. Return something graphically similar
     return '<';
   }
@@ -47,13 +47,13 @@ char translate_morse(MorseCharacter ch) {
 }
 
 MorseCharacter get_morse_translation(char ch) {
-  if(ch >= 'A' && ch <= 'Z') {
+  if (ch >= 'A' && ch <= 'Z') {
     const uint16_t data = morse_characters[ch - 'A'];
     const uint8_t char_len = (data >> 8) & 0xFF;
     const uint8_t char_morse = data & 0xFF;
 
-    return (MorseCharacter) { .length = char_len, .morse = char_morse };
+    return (MorseCharacter){.length = char_len, .morse = char_morse};
   } else {
-    return (MorseCharacter) { 0 };
+    return (MorseCharacter){0};
   }
 }

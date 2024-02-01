@@ -2,14 +2,14 @@
 #include "io.h"
 
 typedef enum {
-    Menu_MorseTx = 0,
-    Menu_MorseTable = 1,
-    Menu_Settings = 2,
-    Menu_Guide = 3,
+  Menu_MorseTx = 0,
+  Menu_MorseTable = 1,
+  Menu_Settings = 2,
+  Menu_Guide = 3,
 
-    Menu_REGULAR_MENU_COUNT,
+  Menu_REGULAR_MENU_COUNT,
 
-    Menu_SelectMenu,
+  Menu_SelectMenu,
 } Menu;
 
 // These functions do a menu's processing.
