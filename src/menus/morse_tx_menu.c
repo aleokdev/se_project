@@ -43,7 +43,7 @@ void skip_to_next_msg_char(void) {
   clear_morse_display();
 }
 
-void redraw_morse_transmission_screen(void) {
+void redraw_morse_transmission_menu(void) {
   ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Transmisor", true);
@@ -86,5 +86,5 @@ void process_morse_tx_menu(Menu* menu_open, const IoActions* actions) {
 void open_morse_tx_menu(Menu* menu_open) {
   *menu_open = Menu_MorseTx;
   tx_state = (TxState) { 0 }; // Reset menu state
-  redraw_morse_transmission_screen();
+  redraw_morse_transmission_menu();
 }

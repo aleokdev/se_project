@@ -132,7 +132,7 @@ typedef struct {
 
 SettingsState sstate;
 
-void redraw_settings_screen(void) {
+void redraw_settings_menu(void) {
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Preferencias", true);
   for(uint8_t page = 7; page > 0; page--) {
@@ -188,5 +188,5 @@ void process_settings_menu(Menu* menu_open, const IoActions* actions) {
 void open_settings_menu(Menu* menu_open) {
   *menu_open = Menu_Settings;
   sstate = (SettingsState) {};
-  redraw_settings_screen();
+  redraw_settings_menu();
 }

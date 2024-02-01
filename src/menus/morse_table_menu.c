@@ -9,7 +9,7 @@ void process_morse_table_menu(Menu* menu_open, const IoActions* actions) {
     }
 }
 
-void redraw_morse_table_screen(void) {
+void redraw_morse_table_menu(void) {
     ssd1306_clearDisplay();
     ssd1306_clearPage(0, true);
     ssd1306_printText(2, 0, "Tabla de Morse", true);
@@ -31,5 +31,5 @@ void redraw_morse_table_screen(void) {
 
 void open_morse_table_menu(Menu* menu_open) {
   *menu_open = Menu_MorseTable;
-  redraw_morse_table_screen();
+  redraw_morse_table_menu();
 }

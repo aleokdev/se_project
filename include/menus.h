@@ -20,12 +20,6 @@ void process_settings_menu(Menu* menu_open, const IoActions* actions);
 void process_guide_menu(Menu* menu_open, const IoActions* actions);
 void process_selection_menu(Menu* menu_open, const IoActions* actions);
 
-void redraw_morse_transmission_screen(void);
-void redraw_morse_table_screen(void);
-void redraw_settings_screen(void);
-void redraw_guide_screen(void);
-void redraw_selection_menu(void);
-
 void open_morse_tx_menu(Menu* menu_open);
 void open_morse_table_menu(Menu* menu_open);
 void open_settings_menu(Menu* menu_open);

@@ -24,15 +24,16 @@ int main(void) {
   __bis_SR_register(GIE);
 
   bool in_low_power_mode = false;
-  Menu menu_open = Menu_MorseTx;
 
-  redraw_morse_transmission_screen();
+  Menu menu_open;
+  open_morse_tx_menu(&menu_open);
+
   ssd1306_command(SSD1306_DISPLAYON); // Turn on the display when everything's in order
 
   play_startup_chime();
 
   // Clear premature actions (e.g. from startup chime)
-  io_actions = (IoActions){0};
+  io_actions = (IoActions){};
 
   for (;;) {
     // Re-enable button interrupts

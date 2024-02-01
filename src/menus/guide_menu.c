@@ -45,7 +45,7 @@ inline void reset_error_display(void) {
   }
 }
 
-void redraw_guide_screen(void) {
+void redraw_guide_menu(void) {
   ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Modo guia", true);
@@ -185,7 +185,7 @@ void open_guide_menu(Menu* menu_open) {
     .error_count = 0,
     .state = GuideState_GenChar_ReadingAdc
   };
-  redraw_guide_screen();
+  redraw_guide_menu();
 
   // Generate new random character by using the ADC
   start_adc_conv();
