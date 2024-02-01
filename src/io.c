@@ -211,6 +211,10 @@ void play_tone(uint16_t tone_time) {
   TA0CCTL1 = OUTMOD_7;
 }
 
+bool playing_tone(void) {
+  return TA0CCR0;
+}
+
 void start_adc_conv(void) {
   ADC10CTL0 |= ADC10ON; // Turn on ADC
   ADC10CTL0 |= ENC;     // Enable conversion

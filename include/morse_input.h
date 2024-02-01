@@ -3,8 +3,6 @@
 #include "io.h"
 #include "morse.h"
 
-#include <stdint.h>
-
 typedef enum { TimerReason_Dah, TimerReason_NextChar } TimerReason;
 
 typedef struct {

@@ -21,7 +21,7 @@ MorseCharacter process_morse_input(MorseInputData* data, const IoActions* action
     data->last_timer_reason = TimerReason_Dah;
     setup_timer(settings.dah_time);
   }
-  if (actions->released_morse_button && TA0CCR0) {
+  if (actions->released_morse_button && playing_tone()) {
     silence_tone();
     reset_timer();
     if (data->current_morse_element < 8) {

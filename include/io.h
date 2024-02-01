@@ -1,7 +1,5 @@
 #pragma once
 
-#include <msp430.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -58,6 +56,8 @@ void config_morse_output(MorseOutput);
 void play_tone(uint16_t period);
 // Silences the tone currently being played.
 void silence_tone(void);
+// Returns whether the device is playing any tone through any output.
+bool playing_tone(void);
 
 // == LPM (Low Power Mode) functions ==
 // Resets the time counter to enable LPM.
