@@ -28,7 +28,7 @@ void setup_clocks(void) {
 }
 
 // Current pin connections:
-//                      | P1.0      P2.6 |
+//               ADC A0 | P1.0      P2.6 |
 //                      | P1.1      P2.7 |
 //           Buzzer PWM | P1.2      TEST |
 //                      | P1.3      #RST |
@@ -221,3 +221,19 @@ uint16_t finish_adc_conv(void) {
   ADC10CTL0 &= ~(ADC10ON | ENC | ADC10SC); // Turn off ADC
   return ADC10MEM;
 }
+
+void reset_timer(void) {
+    TA1CCR0 = 0;
+    TA1CTL |= TACLR;
+}
+
+void setup_timer(uint16_t time) {
+    reset_timer();
+    TA1CCR0 = time;
+    TA1CTL &= ~TACLR;
+}
+
+bool is_timer_setup(void) {
+    return TA1CCR0;
+}
+

@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+void play_startup_chime(void);
+
 int main(void) {
   WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
 
@@ -20,44 +22,43 @@ int main(void) {
 
   __bis_SR_register(GIE);
 
-  const uint32_t hz_to_time = 1000000;
-  play_tone(hz_to_time / 647); // E5 (647.27Hz)
-  _delay_cycles(1000000);
-  play_tone(hz_to_time / 864); // A5 (864Hz)
-  _delay_cycles(1000000);
-  play_tone(hz_to_time / 1027); // C6 (1027.47Hz)
-  _delay_cycles(1000000);
-  silence_tone();
-
   State state = {};
 
   redraw_morse_transmission_screen(&state);
   ssd1306_command(SSD1306_DISPLAYON); // Turn on the display when everything's in order
+
+  play_startup_chime();
+
+  // Clear premature actions (e.g. from startup chime)
+  io_actions = (IoActions){0};
 
   for (;;) {
     // Re-enable button interrupts
     P2IE |= BIT1 | BIT2 | BIT5;
     P1IE |= BIT4;
 
-    // Start ADC conversion if required
-    ADC10CTL0 |= ADC10SC;
-    // Sleep (either deeply if in LPM or on mode 0 otherwise) until an interruption is received
-    if(state.in_low_power_mode) {
-        ssd1306_command(SSD1306_DISPLAYOFF);
-        LPM4;
+    // Only sleep if there are no actions to process
+    if(!io_actions.u16) {
+      // Start ADC conversion if required
+      ADC10CTL0 |= ADC10SC;
+      // Sleep (either deeply if in LPM or on mode 0 otherwise) until an interruption is received
+      if(state.in_low_power_mode) {
+          ssd1306_command(SSD1306_DISPLAYOFF);
+          LPM4;
 
-        // Got woken up, turn on the display and disable LPM
-        ssd1306_command(SSD1306_DISPLAYON);
-        state.in_low_power_mode = false;
-        // Also ignore the actions sent to avoid doing things while the screen is off
-        io_actions = (IoActions){0};
-        continue;
-    } else {
-        LPM0;
+          // Got woken up, turn on the display and disable LPM
+          ssd1306_command(SSD1306_DISPLAYON);
+          state.in_low_power_mode = false;
+          // Also ignore the actions sent to avoid doing things while the screen is off
+          io_actions = (IoActions){0};
+          continue;
+      } else {
+          LPM0;
+      }
+      ADC10CTL0 &= ~ADC10SC;
+      // Got waken up, reset the low power mode time to go asleep
+      lpm_reset_time();
     }
-    ADC10CTL0 &= ~ADC10SC;
-    // Got waken up, reset the low power mode time to go asleep
-    lpm_reset_time();
 
     // Process the IO actions sent via interruptions
     const IoActions actions_to_process = io_actions;
@@ -89,7 +90,22 @@ int main(void) {
     if(io_actions.low_power_mode_requested) {
         state.in_low_power_mode = true;
     }
-    // Clear the actions since they have been processed
-    io_actions = (IoActions){0};
+    // Clear the actions that have been processed
+    io_actions.u16 &= ~actions_to_process.u16;
+  }
+}
+
+void play_startup_chime(void) {
+  play_tone(AUDIO_TIMER_FREQUENCY / 647); // E5 (647.27Hz)
+  setup_timer(100);
+  uint8_t note_idx = 0;
+  for(;;) {
+    LPM0;
+    switch(note_idx++) {
+    case 0: play_tone(AUDIO_TIMER_FREQUENCY / 864); break; // A5 (864Hz)
+    case 1: play_tone(AUDIO_TIMER_FREQUENCY / 1027); break; // C6 (1027.47Hz)
+    default: silence_tone(); return;
+    }
+    setup_timer(100);
   }
 }

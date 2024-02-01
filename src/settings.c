@@ -9,8 +9,8 @@
     .tone_value = 19,                                 \
     /* Default tone volume: About half-way */         \
     .tone_volume = 3,                                 \
-    /* Default dah time: Equivalent to 600Hz */       \
-    .dah_time = AUDIO_TIMER_FREQUENCY / 600u          \
+    /* Default dah time: 150ms */                     \
+    .dah_time = TIMER1_FREQUENCY * 3ul / 20ul         \
 }
 
 Settings settings = DEFAULT_SETTINGS;

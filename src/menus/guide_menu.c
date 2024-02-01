@@ -25,8 +25,12 @@ typedef struct {
   enum {
     GuideState_GenChar_ReadingAdc,
     GuideState_Guide,
+    GuideState_PlayCorrectChime,
     GuideState_ShowingCorrectTranslation
   } state;
+
+  uint16_t tone_buffer[2];
+  uint8_t tone_idx;
 } GuideState;
 GuideState gstate;
 
@@ -66,11 +70,20 @@ void query_next_char(void) {
 }
 
 void check_char_written(MorseCharacter ch) {
+  clear_morse_display();
+
   if(translate_morse(ch) == gstate.current_char) {
     // The user wrote the correct morse translation for the character shown
     gstate.correct_translations++;
     ssd1306_printUI32(100+6, 2, gstate.correct_translations, false);
-    query_next_char();
+
+    const uint32_t hz_to_time = 1000000ul;
+    play_tone(hz_to_time / 880ul); // A5 (880Hz)
+    gstate.tone_buffer[0] = hz_to_time / 988ul; // B5 (988Hz)
+    gstate.tone_buffer[1] = hz_to_time / 1047ul; // C6 (1047Hz)
+    gstate.tone_idx = 0;
+    gstate.state = GuideState_PlayCorrectChime;
+    setup_timer(1500/16);
   } else {
     // The user wrote an incorrect morse translation for the character shown
     ssd1306_printChar(ERROR_DISPLAY_X + (gstate.error_count << 3), ERROR_DISPLAY_Y, 'x', false);
@@ -88,10 +101,14 @@ void check_char_written(MorseCharacter ch) {
       for(uint8_t m = 0; m < translation.length; m++) {
         ssd1306_printChar(76+6*3 + m * 6, 7, translation.morse & (1 << m) ? '-' : '.', false);
       }
+
+      const uint32_t hz_to_time = 1000000;
+      play_tone(hz_to_time / 1047); // C6 (1047Hz)
+      gstate.tone_buffer[1] = hz_to_time / 988ul; // E5 (659Hz)
+      gstate.tone_idx = 1;
+      setup_timer(1500/16);
     }
   }
-
-  clear_morse_display();
 }
 
 void process_guide_menu(State* state, const IoActions* actions) {
@@ -99,8 +116,9 @@ void process_guide_menu(State* state, const IoActions* actions) {
   case GuideState_GenChar_ReadingAdc: {
     if(actions->adc10_conv_finished) {
       // We need a value between 0 (A) and 25 (Z)
+      // This method is biased towards G, T, D, Q, J & W, but it should be fine
       static uint8_t conversion_idx = 0;
-      const uint8_t rand_table[] = {13, 6, 3, 2, 1}; // Not perfectly weighted, but it'll do
+      const uint8_t rand_table[] = {13, 6, 3, 2, 1};
       gstate.current_char += (finish_adc_conv() & 1) ? rand_table[conversion_idx] : 0;
       if(++conversion_idx >= 5) {
         ssd1306_printChar2x(20, 2, gstate.current_char, false);
@@ -127,6 +145,18 @@ void process_guide_menu(State* state, const IoActions* actions) {
     break;
   }
 
+  case GuideState_PlayCorrectChime:
+    if(actions->timer1_finished) {
+      if(gstate.tone_idx >= 2) {
+        silence_tone();
+        query_next_char();
+      } else {
+        play_tone(gstate.tone_buffer[gstate.tone_idx++]);
+        setup_timer(1500/16);
+      }
+    }
+    break;
+
   case GuideState_ShowingCorrectTranslation:
     if(actions->pressed_morse_button) {
       gstate.state = GuideState_Guide;
@@ -135,19 +165,25 @@ void process_guide_menu(State* state, const IoActions* actions) {
       gstate.input_data = (MorseInputData) { 0 };
       query_next_char();
     }
+    if(gstate.tone_idx >= 2) {
+      silence_tone();
+    } else {
+      play_tone(gstate.tone_buffer[gstate.tone_idx++]);
+      setup_timer(1500/16);
+    }
     break;
   }
 }
 
 void open_guide_menu(State* state) {
   state->menu_open = Menu_Guide;
-  redraw_guide_screen(state);
 
   gstate = (GuideState) {
     .current_char = 'A',
     .error_count = 0,
     .state = GuideState_GenChar_ReadingAdc
   };
+  redraw_guide_screen(state);
 
   // Generate new random character by using the ADC
   start_adc_conv();
