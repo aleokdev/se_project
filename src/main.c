@@ -7,7 +7,9 @@
 #include "ssd1306.h"
 #include "state.h"
 #include "menus.h"
+
 #include <msp430.h>
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -23,6 +25,7 @@ int main(void) {
   __bis_SR_register(GIE);
 
   State state = {};
+  bool in_low_power_mode = false;
 
   redraw_morse_transmission_screen(&state);
   ssd1306_command(SSD1306_DISPLAYON); // Turn on the display when everything's in order
@@ -42,13 +45,13 @@ int main(void) {
       // Start ADC conversion if required
       ADC10CTL0 |= ADC10SC;
       // Sleep (either deeply if in LPM or on mode 0 otherwise) until an interruption is received
-      if(state.in_low_power_mode) {
+      if(in_low_power_mode) {
           ssd1306_command(SSD1306_DISPLAYOFF);
           LPM4;
 
           // Got woken up, turn on the display and disable LPM
           ssd1306_command(SSD1306_DISPLAYON);
-          state.in_low_power_mode = false;
+          in_low_power_mode = false;
           // Also ignore the actions sent to avoid doing things while the screen is off
           io_actions = (IoActions){0};
           continue;
@@ -88,7 +91,7 @@ int main(void) {
     }
 
     if(io_actions.low_power_mode_requested) {
-        state.in_low_power_mode = true;
+        in_low_power_mode = true;
     }
     // Clear the actions that have been processed
     io_actions.u16 &= ~actions_to_process.u16;
