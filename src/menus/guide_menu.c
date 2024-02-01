@@ -29,7 +29,9 @@ typedef struct {
     GuideState_ShowingCorrectTranslation
   } state;
 
+  // Tones to play in GuideState_PlayCorrectChime & GuideState_ShowingCorrectTranslation
   uint16_t tone_buffer[2];
+  // Index of the next tone from tone_buffer to be played
   uint8_t tone_idx;
 } GuideState;
 GuideState gstate;
@@ -43,7 +45,7 @@ inline void reset_error_display(void) {
   }
 }
 
-void redraw_guide_screen(const State* _state) {
+void redraw_guide_screen(void) {
   ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Modo guia", true);
@@ -111,7 +113,7 @@ void check_char_written(MorseCharacter ch) {
   }
 }
 
-void process_guide_menu(State* state, const IoActions* actions) {
+void process_guide_menu(Menu* menu_open, const IoActions* actions) {
   switch(gstate.state) {
   case GuideState_GenChar_ReadingAdc: {
     if(actions->adc10_conv_finished) {
@@ -119,6 +121,7 @@ void process_guide_menu(State* state, const IoActions* actions) {
       // This method is biased towards G, T, D, Q, J & W, but it should be fine
       static uint8_t conversion_idx = 0;
       const uint8_t rand_table[] = {13, 6, 3, 2, 1};
+      // Use the first bit of the ADC conversion to determine whether to add the conversion_idx-th value of rand_table to current_char or not
       gstate.current_char += (finish_adc_conv() & 1) ? rand_table[conversion_idx] : 0;
       if(++conversion_idx >= 5) {
         ssd1306_printChar2x(20, 2, gstate.current_char, false);
@@ -134,7 +137,7 @@ void process_guide_menu(State* state, const IoActions* actions) {
   case GuideState_Guide: {
     if (actions->pressed_encoder) {
       silence_tone();
-      open_selection_menu(state);
+      open_selection_menu(menu_open);
     }
 
     const MorseCharacter char_input = process_morse_input(&gstate.input_data, actions);
@@ -175,15 +178,14 @@ void process_guide_menu(State* state, const IoActions* actions) {
   }
 }
 
-void open_guide_menu(State* state) {
-  state->menu_open = Menu_Guide;
-
+void open_guide_menu(Menu* menu_open) {
+  *menu_open = Menu_Guide;
   gstate = (GuideState) {
     .current_char = 'A',
     .error_count = 0,
     .state = GuideState_GenChar_ReadingAdc
   };
-  redraw_guide_screen(state);
+  redraw_guide_screen();
 
   // Generate new random character by using the ADC
   start_adc_conv();

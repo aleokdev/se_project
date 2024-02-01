@@ -12,22 +12,22 @@ typedef enum {
     Menu_SelectMenu,
 } Menu;
 
-#include "state.h"
+// These functions do a menu's processing.
+// A menu's `open_*_menu()` function should be called before its process one.
+void process_morse_tx_menu(Menu* menu_open, const IoActions* actions);
+void process_morse_table_menu(Menu* menu_open, const IoActions* actions);
+void process_settings_menu(Menu* menu_open, const IoActions* actions);
+void process_guide_menu(Menu* menu_open, const IoActions* actions);
+void process_selection_menu(Menu* menu_open, const IoActions* actions);
 
-void process_morse_tx_menu(State* state, const IoActions* actions);
-void process_selection_menu(State* state, const IoActions* actions);
-void process_settings_menu(State* state, const IoActions* actions);
-void process_morse_table_menu(State* state, const IoActions* actions);
-void process_guide_menu(State* state, const IoActions* actions);
+void redraw_morse_transmission_screen(void);
+void redraw_morse_table_screen(void);
+void redraw_settings_screen(void);
+void redraw_guide_screen(void);
+void redraw_selection_menu(void);
 
-void redraw_morse_transmission_screen(const State*);
-void redraw_selection_menu(const State*);
-void redraw_settings_screen(const State*);
-void redraw_morse_table_screen(const State*);
-void redraw_guide_screen(const State*);
-
-void open_morse_tx_menu(State*);
-void open_selection_menu(State*);
-void open_guide_menu(State*);
-void open_morse_table_menu(State*);
-void open_settings_menu(State*);
+void open_morse_tx_menu(Menu* menu_open);
+void open_morse_table_menu(Menu* menu_open);
+void open_settings_menu(Menu* menu_open);
+void open_guide_menu(Menu* menu_open);
+void open_selection_menu(Menu* menu_open);

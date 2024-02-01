@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 
+#define MESSAGE_BUFFER_MAX_LENGTH 10
+
 typedef struct {
   // A buffer for the ASCII message sent until now.
   char msg_buffer[MESSAGE_BUFFER_MAX_LENGTH];
@@ -41,17 +43,17 @@ void skip_to_next_msg_char(void) {
   clear_morse_display();
 }
 
-void redraw_morse_transmission_screen(const State* _state) {
+void redraw_morse_transmission_screen(void) {
   ssd1306_clearDisplay();
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Transmisor", true);
   redraw_message_buffer();
 }
 
-void process_morse_tx_menu(State* state, const IoActions* actions) {
+void process_morse_tx_menu(Menu* menu_open, const IoActions* actions) {
   if (actions->pressed_encoder) {
     silence_tone();
-    open_selection_menu(state);
+    open_selection_menu(menu_open);
     return;
   }
 
@@ -81,8 +83,8 @@ void process_morse_tx_menu(State* state, const IoActions* actions) {
   }
 }
 
-void open_morse_tx_menu(State* state) {
-  state->menu_open = Menu_MorseTx;
+void open_morse_tx_menu(Menu* menu_open) {
+  *menu_open = Menu_MorseTx;
   tx_state = (TxState) { 0 }; // Reset menu state
-  redraw_morse_transmission_screen(state);
+  redraw_morse_transmission_screen();
 }

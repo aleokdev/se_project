@@ -3,13 +3,13 @@
 #include "morse.h"
 #include "ssd1306.h"
 
-void process_morse_table_menu(State* state, const IoActions* actions) {
+void process_morse_table_menu(Menu* menu_open, const IoActions* actions) {
     if (actions->pressed_encoder) {
-      open_selection_menu(state);
+      open_selection_menu(menu_open);
     }
 }
 
-void redraw_morse_table_screen(const State* _state) {
+void redraw_morse_table_screen(void) {
     ssd1306_clearDisplay();
     ssd1306_clearPage(0, true);
     ssd1306_printText(2, 0, "Tabla de Morse", true);
@@ -29,7 +29,7 @@ void redraw_morse_table_screen(const State* _state) {
     }
 }
 
-void open_morse_table_menu(State* state) {
-  state->menu_open = Menu_MorseTable;
-  redraw_morse_table_screen(state);
+void open_morse_table_menu(Menu* menu_open) {
+  *menu_open = Menu_MorseTable;
+  redraw_morse_table_screen();
 }

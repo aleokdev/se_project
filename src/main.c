@@ -5,7 +5,6 @@
 #include "rotary_encoder.h"
 #include "settings.h"
 #include "ssd1306.h"
-#include "state.h"
 #include "menus.h"
 
 #include <msp430.h>
@@ -24,10 +23,10 @@ int main(void) {
 
   __bis_SR_register(GIE);
 
-  State state = {};
   bool in_low_power_mode = false;
+  Menu menu_open = Menu_MorseTx;
 
-  redraw_morse_transmission_screen(&state);
+  redraw_morse_transmission_screen();
   ssd1306_command(SSD1306_DISPLAYON); // Turn on the display when everything's in order
 
   play_startup_chime();
@@ -68,25 +67,25 @@ int main(void) {
     // Disable button interruptions to decrease I2C comms errors
     P2IE = 0;
     P1IE = 0;
-    switch(state.menu_open) {
+    switch(menu_open) {
     case Menu_MorseTx:
-      process_morse_tx_menu(&state, &actions_to_process);
+      process_morse_tx_menu(&menu_open, &actions_to_process);
       break;
 
     case Menu_Settings:
-      process_settings_menu(&state, &actions_to_process);
+      process_settings_menu(&menu_open, &actions_to_process);
       break;
 
     case Menu_MorseTable:
-      process_morse_table_menu(&state, &actions_to_process);
+      process_morse_table_menu(&menu_open, &actions_to_process);
       break;
 
     case Menu_SelectMenu:
-      process_selection_menu(&state, &actions_to_process);
+      process_selection_menu(&menu_open, &actions_to_process);
       break;
 
     case Menu_Guide:
-      process_guide_menu(&state, &actions_to_process);
+      process_guide_menu(&menu_open, &actions_to_process);
       break;
     }
 

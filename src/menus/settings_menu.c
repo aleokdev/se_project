@@ -125,9 +125,14 @@ void changed_dah_time(ReDirection dir) {
     }
 }
 
+typedef struct {
+  uint8_t setting_hovered;
+  bool setting_is_selected;
+} SettingsState;
 
+SettingsState sstate;
 
-void redraw_settings_screen(const State* state) {
+void redraw_settings_screen(void) {
   ssd1306_clearPage(0, true);
   ssd1306_printText(2, 0, "Preferencias", true);
   for(uint8_t page = 7; page > 0; page--) {
@@ -135,53 +140,53 @@ void redraw_settings_screen(const State* state) {
   }
 
   for (uint8_t i = SETTINGS_COUNT; i > 0; i--) {
-    const bool is_setting_hovered = state->setting_hovered == (i - 1u);
+    const bool is_setting_hovered = sstate.setting_hovered == (i - 1u);
     setting_params[i - 1u].redraw_fn(is_setting_hovered,
-                                     is_setting_hovered && state->setting_is_selected);
+                                     is_setting_hovered && sstate.setting_is_selected);
   }
 }
 
-void process_settings_menu(State* state, const IoActions* actions) {
+void process_settings_menu(Menu* menu_open, const IoActions* actions) {
   // Close the settings menu if the rotary encoder button is pressed
     if (actions->pressed_morse_button) {
-      open_selection_menu(state);
       silence_tone();
       save_settings();
-      state->setting_is_selected = false;
+      open_selection_menu(menu_open);
       return;
     }
 
   if (actions->rotated_encoder) {
-    if (!state->setting_is_selected) {
-      const uint8_t last_setting_hovered = state->setting_hovered;
+    if (!sstate.setting_is_selected) {
+      const uint8_t last_setting_hovered = sstate.setting_hovered;
 
       if (actions->encoder_direction == Cw) {
-        if (state->setting_hovered < SETTINGS_COUNT - 1) {
-          state->setting_hovered++;
+        if (sstate.setting_hovered < SETTINGS_COUNT - 1) {
+          sstate.setting_hovered++;
         }
       } else {
-        if (state->setting_hovered > 0) {
-          state->setting_hovered--;
+        if (sstate.setting_hovered > 0) {
+          sstate.setting_hovered--;
         }
       }
 
-      if (last_setting_hovered != state->setting_hovered) {
+      if (last_setting_hovered != sstate.setting_hovered) {
         setting_params[last_setting_hovered].redraw_fn(false, false);
-        setting_params[state->setting_hovered].redraw_fn(true, false);
+        setting_params[sstate.setting_hovered].redraw_fn(true, false);
       }
     } else {
-      setting_params[state->setting_hovered].changed_fn(actions->encoder_direction);
-      setting_params[state->setting_hovered].redraw_fn(true, true);
+      setting_params[sstate.setting_hovered].changed_fn(actions->encoder_direction);
+      setting_params[sstate.setting_hovered].redraw_fn(true, true);
     }
   }
 
   if (actions->pressed_encoder) {
-    state->setting_is_selected = !state->setting_is_selected;
-    setting_params[state->setting_hovered].redraw_fn(true, state->setting_is_selected);
+    sstate.setting_is_selected = !sstate.setting_is_selected;
+    setting_params[sstate.setting_hovered].redraw_fn(true, sstate.setting_is_selected);
   }
 }
 
-void open_settings_menu(State* state) {
-  state->menu_open = Menu_Settings;
-  redraw_settings_screen(state);
+void open_settings_menu(Menu* menu_open) {
+  *menu_open = Menu_Settings;
+  sstate = (SettingsState) {};
+  redraw_settings_screen();
 }
