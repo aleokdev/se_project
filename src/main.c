@@ -2,7 +2,6 @@
 #include "io.h"
 #include "menus.h"
 #include "morse.h"
-#include "rotary_encoder.h"
 #include "settings.h"
 #include "ssd1306.h"
 #include "menus.h"
@@ -99,14 +98,14 @@ int main(void) {
 }
 
 void play_startup_chime(void) {
-  play_tone(AUDIO_TIMER_FREQUENCY / 647); // E5 (647.27Hz)
+  play_tone(AUDIO_NOTE(647)); // E5 (647.27Hz)
   setup_timer(100);
   uint8_t note_idx = 0;
   for(;;) {
     LPM0;
     switch(note_idx++) {
-    case 0: play_tone(AUDIO_TIMER_FREQUENCY / 864); break; // A5 (864Hz)
-    case 1: play_tone(AUDIO_TIMER_FREQUENCY / 1027); break; // C6 (1027.47Hz)
+    case 0: play_tone(AUDIO_NOTE(864)); break; // A5 (864Hz)
+    case 1: play_tone(AUDIO_NOTE(1027)); break; // C6 (1027.47Hz)
     default: silence_tone(); return;
     }
     setup_timer(100);

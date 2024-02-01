@@ -1,6 +1,5 @@
 #include "menus.h"
 
-#include "rotary_encoder.h"
 #include "settings.h"
 #include "ssd1306.h"
 

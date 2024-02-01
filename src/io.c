@@ -208,10 +208,6 @@ void play_tone(uint16_t tone_time) {
   TA0CCTL1 = OUTMOD_7;
 }
 
-bool is_encoder_pressed(void) {
-  return !(P1IN & BIT4);
-}
-
 void start_adc_conv(void) {
   ADC10CTL0 |= ADC10ON;       // Turn on ADC
   ADC10CTL0 |= ENC;           // Enable conversion
@@ -232,8 +228,3 @@ void setup_timer(uint16_t time) {
     TA1CCR0 = time;
     TA1CTL &= ~TACLR;
 }
-
-bool is_timer_setup(void) {
-    return TA1CCR0;
-}
-

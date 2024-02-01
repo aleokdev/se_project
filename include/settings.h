@@ -1,14 +1,9 @@
 #pragma once
 
-#include "rotary_encoder.h"
+#include "io.h"
 
 #include <stdbool.h>
 #include <stdint.h>
-
-typedef enum {
-    MorseOutput_Buzzer,
-    MorseOutput_Aux
-} MorseOutput;
 
 #define SETTINGS_VOLUME_MAX 10
 

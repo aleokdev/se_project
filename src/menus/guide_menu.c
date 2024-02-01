@@ -79,10 +79,9 @@ void check_char_written(MorseCharacter ch) {
     gstate.correct_translations++;
     ssd1306_printUI32(100+6, 2, gstate.correct_translations, false);
 
-    const uint32_t hz_to_time = 1000000ul;
-    play_tone(hz_to_time / 880ul); // A5 (880Hz)
-    gstate.tone_buffer[0] = hz_to_time / 988ul; // B5 (988Hz)
-    gstate.tone_buffer[1] = hz_to_time / 1047ul; // C6 (1047Hz)
+    play_tone(AUDIO_NOTE(880)); // A5 (880Hz)
+    gstate.tone_buffer[0] = AUDIO_NOTE(988); // B5 (988Hz)
+    gstate.tone_buffer[1] = AUDIO_NOTE(1047); // C6 (1047Hz)
     gstate.tone_idx = 0;
     gstate.state = GuideState_PlayCorrectChime;
     setup_timer(1500/16);
@@ -104,9 +103,8 @@ void check_char_written(MorseCharacter ch) {
         ssd1306_printChar(76+6*3 + m * 6, 7, translation.morse & (1 << m) ? '-' : '.', false);
       }
 
-      const uint32_t hz_to_time = 1000000;
-      play_tone(hz_to_time / 1047); // C6 (1047Hz)
-      gstate.tone_buffer[1] = hz_to_time / 988ul; // E5 (659Hz)
+      play_tone(AUDIO_NOTE(1047)); // C6 (1047Hz)
+      gstate.tone_buffer[1] = AUDIO_NOTE(988); // E5 (659Hz)
       gstate.tone_idx = 1;
       setup_timer(1500/16);
     }
