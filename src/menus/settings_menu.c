@@ -52,7 +52,7 @@ void redraw_volume(bool hovered, bool selected) {
 
 void redraw_tone(bool hovered, bool selected) {
   ssd1306_printText(0, 3, "     Tono", hovered);
-  const uint16_t tone = AUDIO_TIMER_FREQUENCY / (settings.tone_value + 1);
+  const int16_t tone = AUDIO_TIMER_FREQUENCY / (settings.tone_value + 1);
   char buffer[16];
   snprintf(buffer, 16, "%d Hz", tone);
   ssd1306_printText(6 * 10, 3, buffer, selected);
@@ -65,7 +65,7 @@ void redraw_tone(bool hovered, bool selected) {
 
 void redraw_dah_time(bool hovered, bool selected) {
   ssd1306_printText(0, 4, "Velocidad", hovered);
-  const uint16_t speed = (settings.dah_time + 1) * 10 / 15;
+  const int16_t speed = (settings.dah_time + 1) * 10 / 15;
   char buffer[16];
   snprintf(buffer, 16, "%d ms/dah", speed);
   ssd1306_printText(6 * 10, 4, buffer, selected);

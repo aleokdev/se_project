@@ -11,24 +11,6 @@
 
 unsigned char buffer[32]; // buffer for data transmission to screen
 
-/* ====================================================================
- * Horizontal Centering Number Array
- * ==================================================================== */
-const unsigned char HcenterUL[] = {
-    // Horizontally center number with separators on screen
-    0,  // 0 digits, not used but included to size array correctly
-    61, // 1 digit
-    58, // 2 digits
-    55, // 3 digits
-    49, // 4 digits and 1 separator
-    46, // 5 digits and 1 separator
-    43, // 6 digits and 1 separator
-    37, // 7 digits and 2 separators
-    34, // 8 digits and 2 separators
-    31, // 9 digits and 2 separators
-    25  // 10 digits and 3 separators
-};
-
 void ssd1306_init(void) {
   // SSD1306 init sequence
   ssd1306_command(SSD1306_DISPLAYOFF);         // 0xAE

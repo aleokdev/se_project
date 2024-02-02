@@ -72,8 +72,6 @@ void query_next_char(void) {
 }
 
 void check_char_written(MorseCharacter ch) {
-  clear_morse_display();
-
   if (translate_morse(ch) == gstate.current_char) {
     // The user wrote the correct morse translation for the character shown
     gstate.correct_translations++;

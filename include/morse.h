@@ -8,7 +8,7 @@ typedef struct {
   uint8_t morse;
 } MorseCharacter;
 
-const static MorseCharacter morse_backspace = {.length = 8, .morse = 0};
+static const MorseCharacter morse_backspace = {.length = 8, .morse = 0};
 
 // Returns the given morse code as an ASCII character, or 0 if it does not match
 // any

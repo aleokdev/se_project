@@ -16,11 +16,12 @@ void redraw_morse_table_menu(void) {
   uint8_t i = 'A';
   for (uint8_t x = 2;; x += 31) {
     for (uint8_t y = 1; y < 8; y++) {
-      MorseCharacter ch = get_morse_translation(i);
+      const MorseCharacter ch = get_morse_translation(i);
 
       ssd1306_printChar(x, y, i, false);
-      for (uint8_t m = 0; m < ch.length; m++) {
-        ssd1306_printChar(x + (m + 1) * 6, y, ch.morse & (1 << m) ? '-' : '.', false);
+      for (uint8_t morse_element = 0; morse_element < ch.length; morse_element++) {
+        const bool is_dah = ch.morse & (1 << morse_element);
+        ssd1306_printChar(x + (morse_element + 1) * 6, y, is_dah ? '-' : '.', false);
       }
       if (++i >= 'Z') {
         return;

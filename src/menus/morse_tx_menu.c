@@ -40,7 +40,6 @@ void skip_to_next_msg_char(void) {
   } else {
     tx_state.current_msg_char++;
   }
-  clear_morse_display();
 }
 
 void redraw_morse_transmission_menu(void) {
@@ -78,7 +77,6 @@ void process_morse_tx_menu(Menu* menu_open, const IoActions* actions) {
         ssd1306_printChar2x((tx_state.current_msg_char << 3) + (tx_state.current_msg_char << 2), 2,
                             ' ', false);
       }
-      clear_morse_display();
     } else {
       skip_to_next_msg_char();
     }
