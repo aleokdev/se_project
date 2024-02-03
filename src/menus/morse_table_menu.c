@@ -23,7 +23,7 @@ void redraw_morse_table_menu(void) {
         const bool is_dah = ch.morse & (1 << morse_element);
         ssd1306_printChar(x + (morse_element + 1) * 6, y, is_dah ? '-' : '.', false);
       }
-      if (++i >= 'Z') {
+      if (++i > 'Z') {
         return;
       }
     }
