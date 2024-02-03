@@ -30,10 +30,6 @@ const uint16_t morse_characters[] = {
 };
 
 char translate_morse(MorseCharacter ch) {
-  if (ch.length == 8 && !ch.morse) {
-    // ........ | Backspace. Return something graphically similar
-    return '<';
-  }
   for (uint8_t i = sizeof(morse_characters) / 2; i > 0; i--) {
     uint16_t data = morse_characters[i - 1u];
     uint8_t char_len = (data >> 8) & 0xFF;
