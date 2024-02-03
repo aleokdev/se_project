@@ -7,13 +7,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef struct {
-  void (*redraw_fn)(bool /* hovered */, bool /* selected */);
-  void (*changed_fn)(ReDirection /* direction the rotary encoder has been rotated towards */);
-} SettingParams;
-
-#define SETTINGS_COUNT 4
-
 void redraw_output_sel(bool hovered, bool selected);
 void redraw_volume(bool hovered, bool selected);
 void redraw_tone(bool hovered, bool selected);
@@ -22,6 +15,13 @@ void changed_output_sel(ReDirection dir);
 void changed_volume(ReDirection dir);
 void changed_tone(ReDirection dir);
 void changed_dah_time(ReDirection dir);
+
+typedef struct {
+  void (*redraw_fn)(bool /* hovered */, bool /* selected */);
+  void (*changed_fn)(ReDirection /* direction the rotary encoder has been rotated towards */);
+} SettingParams;
+
+#define SETTINGS_COUNT 4
 
 const SettingParams setting_params[SETTINGS_COUNT] = {
     {.redraw_fn = redraw_output_sel, .changed_fn = changed_output_sel},
