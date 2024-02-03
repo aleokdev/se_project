@@ -38,10 +38,10 @@ void save_settings(void) {
   FCTL1 = FWKEY | ERASE;        // Erase individual segment only
   FCTL2 = FWKEY | FSSEL_1 | 35; // MCLK (16 MHz), divide by 35: ~457kHz
   FCTL3 = FWKEY | LOCKA; // Disable flash-wide write lock, enable segment A lock for safety purposes
-  *(uint8_t*)PASSWORD_ADDR = 0; // Clear segment B
+  *(volatile uint8_t*)PASSWORD_ADDR = 0; // Clear segment B
   // Now save the current settings
   FCTL1 = FWKEY | WRT;                                // Do not erase, bit/byte/word write mode
-  *(uint8_t*)PASSWORD_ADDR = SETTINGS_PASSWORD;       // Write settings password
+  *(volatile uint8_t*)PASSWORD_ADDR = SETTINGS_PASSWORD;       // Write settings password
   memcpy(SETTINGS_ADDR, &settings, sizeof(settings)); // Write settings
   FCTL1 = FWKEY;                                      // Do not erase, write disabled
   FCTL3 = FWKEY | LOCK;                               // Enable flash-wide write lock
