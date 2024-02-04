@@ -2,10 +2,12 @@
 
 #include "ssd1306.h"
 
-Menu last_menu;
-
 typedef struct {
+  // The index of the menu currently being hovered.
   uint8_t menu_idx_hovered;
+  // Identifies the menu that was last open, used for changing its display name to a message akin to
+  // "Back".
+  Menu last_menu;
 } SelectionMenuState;
 SelectionMenuState sstate;
 
@@ -16,7 +18,8 @@ void draw_menu_tab(Menu menu, bool is_hovered) {
 
   ssd1306_clearPage((uint8_t)menu, is_hovered);
   ssd1306_printText(2, (uint8_t)menu,
-                    (uint8_t)last_menu == (uint8_t)menu ? cancel_text : menu_names[(uint8_t)menu],
+                    (uint8_t)sstate.last_menu == (uint8_t)menu ? cancel_text
+                                                               : menu_names[(uint8_t)menu],
                     is_hovered);
 }
 
@@ -54,8 +57,8 @@ void redraw_selection_menu(void) {
 }
 
 void open_selection_menu(Menu* menu_open) {
-  last_menu = *menu_open;
+  sstate.last_menu = *menu_open;
   *menu_open = Menu_SelectMenu;
-  sstate.menu_idx_hovered = (uint8_t)last_menu;
+  sstate.menu_idx_hovered = (uint8_t)sstate.last_menu;
   redraw_selection_menu();
 }
