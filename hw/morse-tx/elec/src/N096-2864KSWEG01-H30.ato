@@ -1,0 +1,39 @@
+# Screen
+
+component N096_2864KSWEG01_H30:
+    # component N096-2864KSWEG01-H30
+    footprint = "OLED_0.96-30P-P0.70-12864"
+    lcsc_id = "C2890596"
+    mpn = "C2890596"
+    # pins
+    signal N_C__GND_ ~ pin 1
+    signal C2P ~ pin 2
+    signal C2N ~ pin 3
+    signal C1P ~ pin 4
+    signal C1N ~ pin 5
+    signal VBAT ~ pin 6
+    signal N_C_ ~ pin 7
+    signal VSS ~ pin 8
+    signal VDD ~ pin 9
+    signal BS0 ~ pin 10
+    signal BS1 ~ pin 11
+    signal BS2 ~ pin 12
+    signal CS_ ~ pin 13
+    signal RES_ ~ pin 14
+    signal D_C_ ~ pin 15
+    signal R_W_ ~ pin 16
+    signal E_RD_ ~ pin 17
+    signal D0 ~ pin 18
+    signal D1 ~ pin 19
+    signal D2 ~ pin 20
+    signal D3 ~ pin 21
+    signal D4 ~ pin 22
+    signal D5 ~ pin 23
+    signal D6 ~ pin 24
+    signal D7 ~ pin 25
+    signal IREF ~ pin 26
+    signal VCOMH ~ pin 27
+    signal VCC ~ pin 28
+    signal VLSS ~ pin 29
+    N_C__GND_ ~ pin 30
+

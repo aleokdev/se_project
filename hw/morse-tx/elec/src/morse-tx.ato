@@ -1,0 +1,11 @@
+import N096_2864KSWEG01_H30 from "N096_2864KSWEG01_H30.ato"
+import Resistor from "resistors.ato"
+import Capacitor from "capacitors.ato"
+
+module MorseTx:
+    signal gnd
+    screen = new N096_2864KSWEG01_H30
+    c1 = new Capacitor
+    c1.value = 1uF +/- 10%
+    c1.p1 ~ screen.C1P
+    c1.p2 ~ screen.C1N

@@ -3,3 +3,4 @@ fp-info-cache
 fab/
 *.lck
 *.svg
+venv/
