@@ -1,0 +1,11 @@
+component EMK212B7475KG_T:
+    # component EMK212B7475KG-T
+    # 4.7uF +/- 10% 16V X7R capacitor
+    footprint = "C0805"
+    lcsc_id = "C92762"
+    mpn = "C92762"
+    designator_prefix = "C"
+    # pins
+    signal _1 ~ pin 1
+    signal _2 ~ pin 2
+

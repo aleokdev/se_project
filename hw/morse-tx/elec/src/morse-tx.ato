@@ -1,11 +1,59 @@
-import N096_2864KSWEG01_H30 from "N096_2864KSWEG01_H30.ato"
-import Resistor from "resistors.ato"
-import Capacitor from "capacitors.ato"
+import Screen from "screen.ato"
+import MCU from "mcu.ato"
+import Power from "generics/interfaces.ato"
+import JTAG from "generics/interfaces.ato"
+import TPS62203DBVR from "TPS62203DBVR.ato"
+import FXL0530_100_M from "FXL0530-100-M.ato"
+
+component TC2050:
+    mpn = "TC2050-IDC-NL"
+    footprint = "Tag-Connect_TC2050-IDC-NL_2x05_P1.27mm_Vertical"
+
+    # Using diagram provided at https://www.tag-connect.com/debugger-cable-selection-installation-instructions/ti-msp430
+    signal test
+    pwr = new Power
+    jtag = new JTAG
+    jtag.tdo ~ pin 1
+    pwr.vcc ~ pin 2
+    jtag.tdi ~ pin 3
+    pwr.vcc ~ pin 4
+    jtag.tms ~ pin 5
+    # pin 6, no connect
+    jtag.tck ~ pin 7
+    test ~ pin 8
+    pwr.gnd ~ pin 9
+    jtag.reset ~ pin 10
+    
+module Regulator3v3:
+    pwrin = new Power
+    pwrout = new Power
+
+    dc2dc = new TPS62203DBVR
+    pwrin.vcc ~ dc2dc.VI
+    pwrin.gnd ~ dc2dc.GND; pwrout.gnd ~ dc2dc.GND
+    pwrin.vcc ~ dc2dc.EN
+    # todo input capacitor
+    output_ind = new FXL0530_100_M
+    output_ind._1 ~ dc2dc.SW
+    output_ind._2 ~ pwrout.vcc; pwrout.vcc ~ dc2dc.FB
+    # todo output capacitor
+
 
 module MorseTx:
-    signal gnd
-    screen = new N096_2864KSWEG01_H30
-    c1 = new Capacitor
-    c1.value = 1uF +/- 10%
-    c1.p1 ~ screen.C1P
-    c1.p2 ~ screen.C1N
+    pwr3v3 = new Power
+    pwrusb = new Power
+    pwr3v3.gnd ~ pwrusb.gnd
+
+    reg3v3 = new Regulator3v3
+    reg3v3.pwrin ~ pwrusb
+    reg3v3.pwrout ~ pwr3v3
+
+    screen = new Screen
+    screen.pwr ~ pwr3v3
+    tc = new TC2050
+    mcu = new MCU
+    mcu.pwr ~ pwr3v3
+    mcu.jtag ~ tc.jtag
+    mcu.pwr ~ tc.pwr
+    mcu.test ~ tc.test
+

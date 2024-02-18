@@ -1,0 +1,12 @@
+component TPS62203DBVR:
+    # component TPS62203DBVR
+    footprint = "SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR"
+    lcsc_id = "C9051"
+    mpn = "C9051"
+    # pins
+    signal VI ~ pin 1
+    signal GND ~ pin 2
+    signal EN ~ pin 3
+    signal FB ~ pin 4
+    signal SW ~ pin 5
+

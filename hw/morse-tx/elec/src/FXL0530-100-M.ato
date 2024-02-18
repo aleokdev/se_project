@@ -1,0 +1,9 @@
+component FXL0530_100_M:
+    # component FXL0530-100-M
+    footprint = "IND-SMD_L5.4-W5.2_FXL0530"
+    lcsc_id = "C177248"
+    mpn = "C177248"
+    # pins
+    signal _2 ~ pin 2
+    signal _1 ~ pin 1
+

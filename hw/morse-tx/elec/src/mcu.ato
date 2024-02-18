@@ -1,0 +1,35 @@
+import MSP430G2553IPW28 from "MSP430G2553IPW28.ato"
+import I2C from "generics/interfaces.ato"
+import Power from "generics/interfaces.ato"
+import JTAG from "generics/interfaces.ato"
+
+module MCU:
+    pwr = new Power
+    signal test
+    jtag = new JTAG
+    i2c = new I2C
+
+    mcu = new MSP430G2553IPW28
+
+    # Power
+    pwr.vcc ~ mcu.DVCC
+    pwr.gnd ~ mcu.DVSS
+
+    # Test pin
+    test ~ mcu.TEST_SBWTCK
+    
+    # JTAG
+    jtag.tck ~ mcu.P1_4_SMCLK_UCB0STE_UCA0CLK_VREF__VEREF__A4_CA4_TCK
+    jtag.tms ~ mcu.P1_5_TA0_0_UCB0CLK_UCA0STE_A5_CA5_TMS
+    jtag.tdi ~ mcu.P1_7_CAOUT_UCB0SIMO_UCB0SDA_A7_CA7_TDO_TDI
+    jtag.tdo ~ mcu.P1_7_CAOUT_UCB0SIMO_UCB0SDA_A7_CA7_TDO_TDI
+    jtag.reset ~ mcu.RST__NMI_SBWTDIO
+    jtag.vcc ~ pwr.vcc
+    jtag.gnd ~ pwr.gnd
+
+    # I2C
+    i2c.scl ~ mcu.P1_6_TA0_1_UCB0SOMI_UCB0SCL_A6_CA6_TDI_TCLK
+    i2c.sda ~ mcu.P1_7_CAOUT_UCB0SIMO_UCB0SDA_A7_CA7_TDO_TDI
+    i2c.gnd ~ pwr.gnd
+
+    
